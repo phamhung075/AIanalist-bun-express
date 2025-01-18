@@ -107,21 +107,37 @@ export default router;
 **Example:**
 ```typescript
 import { Request, Response } from 'express';
-import { RestHandler } from '@/core/helper/http-status/common/RestHandler';
+import _ERROR from "../helper/http-status/error/index.js";
+import _SUCCESS from "../helper/http-status/success/index.js";
 
-export const getExampleData = (req: Request, res: Response) => {
+export const getExampleData = (req: CustomRequest, res: Response, _next: NextFunction) => {
   try {
     const data = { id: 1, name: 'Sample Data' };
-    RestHandler.success(req, res, {
-      data,
-      message: 'Data retrieved successfully'
-    });
+    return new _SUCCESS.OkSuccess({
+                message: 'Fetched entity by ID successfully',
+                data: entity,
+            }).send(res, _next);
   } catch (error) {
-    RestHandler.error(req, res, {
-      message: 'Failed to retrieve data'
-    });
+    _next(error);
   }
 };
+
+
+//example error throw on controller or middleware
+ if (!token) {
+    return new _ERROR.UnauthorizedError({
+      message: "Unauthorized: No token provided",
+    }).send(res, next);
+  }
+
+
+//example error throw
+ if (!token) {
+    return new _ERROR.UnauthorizedError({
+      message: "Unauthorized: No token provided",
+    });
+  }
+
 ```
 - Validate data using `validateSchema(CreateContactSchema)`.
 
