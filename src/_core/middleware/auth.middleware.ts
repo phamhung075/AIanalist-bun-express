@@ -30,7 +30,7 @@ export async function firebaseAuthMiddleware(
   next: NextFunction
 ) {
   const { idToken } = getTokenCookies(req);
-  console.log("req get", req);
+  // console.log("req get", req);
 
   const token = idToken || req.headers.authorization?.split(" ")[1];
   console.log("token get", token);

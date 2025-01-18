@@ -432,3 +432,378 @@ By following these guidelines, you'll have a scalable and efficient RESTful API 
 
 📃 License
 This project is licensed under the MIT License.
+
+
+
+Example postman response
+`POST http://localhost:3333/api/auth/login`
+
+postman: 200 OK
+
+Request successful. The server has responded as required.
+
+access-token and refresh token is set on cookies
+```
+{
+    "success": true,
+    "message": "User logged in successfully",
+    "data": {},
+    "metadata": {
+        "description": "The request has succeeded.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.3.1",
+        "responseTime": "466ms",
+        "timestamp": "2025-01-18T19:56:52.392Z",
+        "code": 200,
+        "status": "OK"
+    },
+    "options": {
+        "headers": {
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Credentials": "true"
+        }
+    },
+    "links": {
+        "self": {
+            "rel": "self",
+            "href": "localhost:3333/api/auth/login",
+            "method": "POST"
+        },
+        "post-registre": {
+            "title": "POST /registre",
+            "rel": "post-registre",
+            "href": "localhost:3333/api/auth/registre",
+            "method": "POST"
+        },
+        "post-login": {
+            "title": "POST /login",
+            "rel": "post-login",
+            "href": "localhost:3333/api/auth/login",
+            "method": "POST"
+        },
+        "get-current": {
+            "title": "GET /current",
+            "rel": "get-current",
+            "href": "localhost:3333/api/auth/current",
+            "method": "GET"
+        },
+        "get-verify": {
+            "title": "GET /verify",
+            "rel": "get-verify",
+            "href": "localhost:3333/api/auth/verify",
+            "method": "GET"
+        },
+        "get-refreshtoken": {
+            "title": "GET /refreshtoken",
+            "rel": "get-refreshtoken",
+            "href": "localhost:3333/api/auth/refreshtoken",
+            "method": "GET"
+        },
+        "documentation": {
+            "rel": "documentation",
+            "href": "localhost:3333/docs",
+            "method": "GET",
+            "title": "API Documentation"
+        }
+    }
+}
+```
+
+`GET http://localhost:3333/api/auth/current`
+
+postman: 200 OK
+
+Request successful. The server has responded as required.
+```
+{
+    "success": true,
+    "message": "User fetched successfully",
+    "data": {
+        "iss": "https://securetoken.google.com/ai-analyst-14876",
+        "aud": "ai-analyst-14876",
+        "auth_time": 1737230210,
+        "user_id": "VMOmNW6sn0hsyghC1hZWeyGECvD3",
+        "sub": "VMOmNW6sn0hsyghC1hZWeyGECvD3",
+        "iat": 1737230264,
+        "exp": 1737233864,
+        "email": "test.email34816@yopmail.com",
+        "email_verified": false,
+        "firebase": {
+            "identities": {
+                "email": [
+                    "test.email34816@yopmail.com"
+                ]
+            },
+            "sign_in_provider": "password"
+        },
+        "uid": "VMOmNW6sn0hsyghC1hZWeyGECvD3"
+    },
+    "metadata": {
+        "description": "The request has succeeded.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.3.1",
+        "responseTime": "28ms",
+        "timestamp": "2025-01-18T19:57:53.520Z",
+        "code": 200,
+        "status": "OK"
+    },
+    "links": {
+        "self": {
+            "rel": "self",
+            "href": "localhost:3333/api/auth/current",
+            "method": "GET"
+        },
+        "post-registre": {
+            "title": "POST /registre",
+            "rel": "post-registre",
+            "href": "localhost:3333/api/auth/registre",
+            "method": "POST"
+        },
+        "post-login": {
+            "title": "POST /login",
+            "rel": "post-login",
+            "href": "localhost:3333/api/auth/login",
+            "method": "POST"
+        },
+        "get-current": {
+            "title": "GET /current",
+            "rel": "get-current",
+            "href": "localhost:3333/api/auth/current",
+            "method": "GET"
+        },
+        "get-verify": {
+            "title": "GET /verify",
+            "rel": "get-verify",
+            "href": "localhost:3333/api/auth/verify",
+            "method": "GET"
+        },
+        "get-refreshtoken": {
+            "title": "GET /refreshtoken",
+            "rel": "get-refreshtoken",
+            "href": "localhost:3333/api/auth/refreshtoken",
+            "method": "GET"
+        },
+        "documentation": {
+            "rel": "documentation",
+            "href": "localhost:3333/docs",
+            "method": "GET",
+            "title": "API Documentation"
+        }
+    }
+}
+```
+
+`GET localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN`
+
+postman: 200 OK
+
+Request successful. The server has responded as required.
+```
+{
+    "success": true,
+    "message": "Fetched entity by ID successfully",
+    "data": {
+        "id": "yQg9OD4KRTNywa2fHwxN",
+        "name": "Jett Zboncak",
+        "email": "test.email19214@yopmail.com",
+        "phone": "06 26 73 76 92",
+        "message": "Interested in your services",
+        "createdAt": {
+            "_seconds": 1735267038,
+            "_nanoseconds": 739000000
+        },
+        "updatedAt": {
+            "_seconds": 1735267038,
+            "_nanoseconds": 739000000
+        }
+    },
+    "metadata": {
+        "description": "The request has succeeded.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.3.1",
+        "timestamp": "2025-01-18T19:59:10.616Z",
+        "responseTime": "163ms",
+        "code": 200,
+        "status": "OK"
+    },
+    "links": {
+        "self": {
+            "rel": "self",
+            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
+            "method": "GET"
+        },
+        "create": {
+            "title": "POST /",
+            "rel": "create",
+            "href": "localhost:3333/api/contact/",
+            "method": "POST"
+        },
+        "collection": {
+            "title": "GET /",
+            "rel": "collection",
+            "href": "localhost:3333/api/contact/",
+            "method": "GET"
+        },
+        "item": {
+            "title": "GET /:id",
+            "rel": "item",
+            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
+            "method": "GET"
+        },
+        "update": {
+            "title": "PUT /:id",
+            "rel": "update",
+            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
+            "method": "PUT"
+        },
+        "partial-update": {
+            "title": "PATCH /:id",
+            "rel": "partial-update",
+            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
+            "method": "PATCH"
+        },
+        "delete": {
+            "title": "DELETE /:id",
+            "rel": "delete",
+            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
+            "method": "DELETE"
+        },
+        "documentation": {
+            "rel": "documentation",
+            "href": "localhost:3333/docs",
+            "method": "GET",
+            "title": "API Documentation"
+        }
+    }
+}
+```
+
+
+`POST http://localhost:3333/api/contact`
+
+validation fail
+
+postman: 400 Bad Request
+
+The server could not understand the request. Maybe a bad syntax?
+```
+{
+    "success": false,
+    "message": "Validation Error",
+    "error": true,
+    "metadata": {
+        "description": "The server could not understand the request due to invalid syntax.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+        "timestamp": "2025-01-18T17:15:59.353Z",
+        "responseTime": "76ms",
+        "code": 400,
+        "status": "BAD_REQUEST"
+    },
+    "errors": [
+        {
+            "field": "lastName",
+            "message": "Required"
+        },
+        {
+            "field": "email",
+            "message": "Required"
+        },
+        {
+            "field": "phone",
+            "message": "Required"
+        }
+    ],
+    "links": {
+        "self": {
+            "rel": "self",
+            "href": "localhost:3333/api/contact",
+            "method": "POST"
+        },
+        "create": {
+            "title": "POST /",
+            "rel": "create",
+            "href": "localhost:3333/api/contact/",
+            "method": "POST"
+        },
+        "collection": {
+            "title": "GET /",
+            "rel": "collection",
+            "href": "localhost:3333/api/contact/",
+            "method": "GET"
+        },
+        "item": {
+            "title": "GET /:id",
+            "rel": "item",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "GET"
+        },
+        "update": {
+            "title": "PUT /:id",
+            "rel": "update",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "PUT"
+        },
+        "partial-update": {
+            "title": "PATCH /:id",
+            "rel": "partial-update",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "PATCH"
+        },
+        "delete": {
+            "title": "DELETE /:id",
+            "rel": "delete",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "DELETE"
+        },
+        "documentation": {
+            "rel": "documentation",
+            "href": "localhost:3333/docs",
+            "method": "GET",
+            "title": "API Documentation"
+        }
+    }
+}
+```
+
+`http://localhost:3333/api/contactssssssss` 
+
+route not found
+
+postman: 404 Not Found
+
+Requested resource could not be found. 😐
+```
+{
+    "success": false,
+    "message": "The requested resource was not found.",
+    "error": true,
+    "metadata": {
+        "description": "The server cannot find the requested resource.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+        "timestamp": "2025-01-18T20:07:28.241Z",
+        "responseTime": "9ms",
+        "code": 404,
+        "status": "NOT_FOUND"
+    }
+}
+```
+
+`GET localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN`
+not login
+
+postman: 401 Unauthorized
+
+The request is unauthenticated. 
+
+```
+{
+    "success": false,
+    "message": "Unauthorized: No token provided",
+    "error": true,
+    "metadata": {
+        "description": "The client must authenticate itself to get the requested response.",
+        "documentation": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        "timestamp": "2025-01-18T20:08:32.986Z",
+        "responseTime": "4ms",
+        "code": 401,
+        "status": "UNAUTHORIZED"
+    }
+}
+```
