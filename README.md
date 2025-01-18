@@ -301,150 +301,125 @@ Validation error
 ```
 
 Directory structure:
-└── AIanalist/
-    ├── CHANGELOG.md
-    ├── jest.config.ts
-    ├── jest.setup.ts
-    ├── package.json
-    ├── query
-    ├── readme.md
-    ├── src/
-    │   ├── __mocks__/
-    │   │   ├── contact.firebase.ts
-    │   │   ├── express-rate-limit.ts
-    │   │   ├── express-route-tracker/
-    │   │   │   └── dist.ts
-    │   │   ├── firebase-admin.ts
-    │   │   └── helmet.ts
-    │   ├── _core/
-    │   │   ├── auth/
-    │   │   │   ├── auth.controller.ts
-    │   │   │   ├── auth.dto.ts
-    │   │   │   ├── auth.handler.ts
-    │   │   │   ├── auth.interface.ts
-    │   │   │   ├── auth.module.ts
-    │   │   │   ├── auth.repository.ts
-    │   │   │   ├── auth.service.ts
-    │   │   │   ├── auth.validation.ts
-    │   │   │   ├── guards/
-    │   │   │   │   └── jwt-auth.guard.ts
-    │   │   │   ├── index.ts
-    │   │   │   └── strategies/
-    │   │   │       └── jwt.strategy.ts
-    │   │   ├── config/
-    │   │   │   ├── dotenv.config.ts
-    │   │   │   └── firebase-admin.account.ts
-    │   │   ├── database/
-    │   │   │   └── firebase-admin-sdk/
-    │   │   │       └── index.ts
-    │   │   ├── helper/
-    │   │   │   ├── asyncHandler/
-    │   │   │   │   ├── __tests__/
-    │   │   │   │   │   └── asyncHandler.spec.ts
-    │   │   │   │   └── index.ts
-    │   │   │   ├── check-nodemon/
-    │   │   │   │   ├── __tests__/
-    │   │   │   │   │   └── isRunningWithNodemon.spec.ts
-    │   │   │   │   └── index.ts
-    │   │   │   ├── check-system-overload/
-    │   │   │   │   ├── __tests__/
-    │   │   │   │   │   └── check-system-overload.spec.ts
-    │   │   │   │   └── check-system-overload.ts
-    │   │   │   ├── http-status/
-    │   │   │   │   ├── common/
-    │   │   │   │   │   ├── HttpStatusCode.ts
-    │   │   │   │   │   ├── RestHandler.ts
-    │   │   │   │   │   ├── StatusCodes.ts
-    │   │   │   │   │   ├── __tests__/
-    │   │   │   │   │   │   ├── RestHandler.spec.ts
-    │   │   │   │   │   │   └── createPagination.spec.ts
-    │   │   │   │   │   ├── api-config.ts
-    │   │   │   │   │   └── create-pagination.ts
-    │   │   │   │   ├── error/
-    │   │   │   │   │   └── index.ts
-    │   │   │   │   ├── response-log.ts
-    │   │   │   │   └── success/
-    │   │   │   │       └── index.ts
-    │   │   │   ├── interfaces/
-    │   │   │   │   ├── CustomRequest.interface.ts
-    │   │   │   │   ├── FetchPageResult.interface.ts
-    │   │   │   │   └── rest.interface.ts
-    │   │   │   └── validateZodSchema/
-    │   │   │       ├── __tests__/
-    │   │   │       │   └── validateSchema.spec.ts
-    │   │   │       └── index.ts
-    │   │   ├── logger/
-    │   │   │   ├── __tests__/
-    │   │   │   │   └── simple-logger.spec.ts
-    │   │   │   └── simple-logger.ts
-    │   │   ├── middleware/
-    │   │   │   ├── __tests__/
-    │   │   │   │   ├── displayRequest.spec.ts
-    │   │   │   │   └── responseLogger.spec.ts
-    │   │   │   ├── auth.middleware.ts
-    │   │   │   ├── creates-HATEOAS.middleware.txt
-    │   │   │   ├── displayRequest.middleware.ts
-    │   │   │   └── responseLogger.middleware.ts
-    │   │   └── server/
-    │   │       ├── app/
-    │   │       │   ├── __tests__/
-    │   │       │   │   └── app.spec.ts
-    │   │       │   └── app.service.ts
-    │   │       └── server.ts
-    │   ├── modules/
-    │   │   ├── _base/
-    │   │   │   └── crud/
-    │   │   │       ├── BaseController.ts
-    │   │   │       ├── BaseRepository.ts
-    │   │   │       └── BaseService.ts
-    │   │   ├── contact/
-    │   │   │   ├── __tests__/
-    │   │   │   │   ├── contact-controller.spec.ts
-    │   │   │   │   ├── contact.handle.spec.ts
-    │   │   │   │   ├── contact.repository.spec.ts
-    │   │   │   │   ├── contact.route.spec.ts
-    │   │   │   │   └── contact.service.spec.ts
-    │   │   │   ├── contact.controller.ts
-    │   │   │   ├── contact.dto.ts
-    │   │   │   ├── contact.handler.ts
-    │   │   │   ├── contact.interface.ts
-    │   │   │   ├── contact.module.ts
-    │   │   │   ├── contact.repository.ts
-    │   │   │   ├── contact.service.ts
-    │   │   │   ├── contact.validation.ts
-    │   │   │   └── index.ts
-    │   │   ├── index.ts
-    │   │   └── trading-economics-new/
-    │   │       ├── index.ts
-    │   │       ├── trading-economics-new.controller.ts
-    │   │       ├── trading-economics-new.dto.ts
-    │   │       ├── trading-economics-new.handler.ts
-    │   │       ├── trading-economics-new.interface.ts
-    │   │       ├── trading-economics-new.module.ts
-    │   │       ├── trading-economics-new.repository.ts
-    │   │       ├── trading-economics-new.service.ts
-    │   │       └── trading-economics-new.validation.ts
-    │   ├── scripts/
-    │   │   ├── bot/
-    │   │   │   ├── fetch-html-background.py
-    │   │   │   ├── fetch-html.py
-    │   │   │   ├── fetch-single-url-html-background.py
-    │   │   │   └── test.py
-    │   │   ├── openai/
-    │   │   │   ├── analyze_news.py
-    │   │   │   ├── ask0.py
-    │   │   │   └── config/
-    │   │   │       └── aianalist-firebase-adminsdk-8gwkb-09a794ac72.json
-    │   │   └── test-path-converter.ts
-    │   └── utils/
-    │       ├── clean-doublon.ts
-    │       ├── fetch-content.ts
-    │       ├── firebase-utils.service.ts
-    │       ├── get-all-files.ts
-    │       ├── get-data.ts
-    │       ├── get-latest-file.ts
-    │       └── post-data.ts
-    └── tsconfig.json
+├── src/
+│   ├── _core/
+│   │   ├── auth/
+│   │   │   ├── strategies/
+│   │   │   │   └── jwt.strategy.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.dto.ts
+│   │   │   ├── auth.handler.ts
+│   │   │   ├── auth.interface.ts
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.repository.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── auth.validation.ts
+│   │   │   └── index.ts
+│   │   ├── config/
+│   │   │   ├── __specs__/
+│   │   │   │   └── dotenv.config.spec.ts
+│   │   │   ├── dotenv.config.ts
+│   │   │   └── firebase-admin.account.ts
+│   │   ├── database/
+│   │   │   └── firebase-admin-sdk/
+│   │   │       ├── __specs__/
+│   │   │       │   └── firebase-admin-utility.spec.ts
+│   │   │       ├── firebase-admin-utility.ts
+│   │   │       └── index.ts
+│   │   ├── helper/
+│   │   │   ├── asyncHandler/
+│   │   │   │   ├── __tests__/
+│   │   │   │   │   └── asyncHandler.spec.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── check-system-overload/
+│   │   │   │   ├── __tests__/
+│   │   │   │   │   └── check-system-overload.spec.ts
+│   │   │   │   └── check-system-overload.ts
+│   │   │   ├── http-status/
+│   │   │   │   ├── common/
+│   │   │   │   │   ├── __tests__/
+│   │   │   │   │   │   └── createPagination.spec.ts
+│   │   │   │   │   ├── api-config.ts
+│   │   │   │   │   ├── create-pagination.ts
+│   │   │   │   │   ├── HttpStatusCode.ts
+│   │   │   │   │   └── StatusCodes.ts
+│   │   │   │   ├── error/
+│   │   │   │   │   ├── __specs__/
+│   │   │   │   │   │   └── index.spec.ts
+│   │   │   │   │   └── index.ts
+│   │   │   │   ├── success/
+│   │   │   │   │   └── index.ts
+│   │   │   │   └── response-log.ts
+│   │   │   ├── interfaces/
+│   │   │   │   ├── CustomRequest.interface.ts
+│   │   │   │   ├── FetchPageResult.interface.ts
+│   │   │   │   └── rest.interface.ts
+│   │   │   └── validateZodSchema/
+│   │   │       ├── __tests__/
+│   │   │       │   └── validateSchema.spec.ts
+│   │   │       └── index.ts
+│   │   ├── logger/
+│   │   │   ├── __tests__/
+│   │   │   │   └── simple-logger.spec.ts
+│   │   │   └── simple-logger.ts
+│   │   ├── middleware/
+│   │   │   ├── __specs__/
+│   │   │   │   ├── auth.middleware.spec.ts
+│   │   │   │   └── displayRequest.middleware.spec.ts
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── displayRequest.middleware.ts
+│   │   │   ├── errorHandler.ts
+│   │   │   ├── responseLogger.middleware.ts
+│   │   │   └── start-time.middleware.ts
+│   │   └── server/
+│   │       └── app/
+│   │           ├── __tests__/
+│   │           │   └── app.spec.ts
+│   │           └── app.service.ts
+│   ├── modules/
+│   │   ├── _base/
+│   │   │   └── crud/
+│   │   │       ├── __mocks__/
+│   │   │       │   ├── __specs__/
+│   │   │       │   │   ├── BaseController.mocks.spec.ts
+│   │   │       │   │   ├── BaseRepository.mocks.spec.ts
+│   │   │       │   │   └── BaseService.mocks.spec.ts
+│   │   │       │   ├── BaseController.mocks.ts
+│   │   │       │   ├── BaseRepository.mocks.ts
+│   │   │       │   └── BaseService.mocks.ts
+│   │   │       ├── __specs__/
+│   │   │       │   ├── BaseController.spec.ts
+│   │   │       │   ├── BaseRepository.spec.ts
+│   │   │       │   └── BaseService.spec.ts
+│   │   │       ├── BaseController.ts
+│   │   │       ├── BaseRepository.ts
+│   │   │       └── BaseService.ts
+│   │   ├── contact/
+│   │   │   ├── __tests__/
+│   │   │   │   ├── contact-controller.spec.ts
+│   │   │   │   ├── contact.handle.spec.ts
+│   │   │   │   ├── contact.repository.spec.ts
+│   │   │   │   ├── contact.route.spec.ts
+│   │   │   │   └── contact.service.spec.ts
+│   │   │   ├── contact.controller.ts
+│   │   │   ├── contact.dto.ts
+│   │   │   ├── contact.handler.ts
+│   │   │   ├── contact.interface.ts
+│   │   │   ├── contact.module.ts
+│   │   │   ├── contact.repository.ts
+│   │   │   ├── contact.service.ts
+│   │   │   ├── contact.validation.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── types/
+│   │   └── express.d.ts
+│   └── index.ts
+├── .gitignore
+├── bun.lockb
+├── index.ts
+├── package.json
+├── README.md
+└── tsconfig.json
 
 ```
 
