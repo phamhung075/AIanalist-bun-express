@@ -201,7 +201,6 @@ export class AppService {
 		 * Handles all uncaught errors and returns a consistent response format.
 		 */
 		app.use((error: any, req: Request, res: Response, _next: NextFunction) => {
-			const statusCode = error.status || HttpStatusCode.INTERNAL_SERVER_ERROR;
 			const message = error.message 
 							|| StatusCodes[error.status as unknown as HttpStatusCode].phrase 
 							|| StatusCodes[HttpStatusCode.INTERNAL_SERVER_ERROR].phrase;
