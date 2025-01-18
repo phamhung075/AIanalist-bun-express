@@ -1,4 +1,4 @@
-# RESTful API Implementation Guide with Node.js, Express.js, and TypeScript
+# Monolith Modular RESTful API HATEOAS Implementation Guide with Bun, Express.js, and TypeScript
 (on progress)
 ## 📚 **Project Foundation and Tools**
 - **Node.js & Express.js:** Web server framework for handling HTTP requests.
