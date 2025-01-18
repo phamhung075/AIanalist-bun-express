@@ -21,12 +21,14 @@
 
 ## 🛠️ **Implementation Steps**
 ### 0. **environment**
+```
 ├── src/
 │   ├── environment/
 │   │   ├── .env.development/
 │   │   ├── .env.production/
 │   │   ├── .env.test/
 │   │   ├── ai-analyst-14876-firebase-adminsdk-euw8h-wwwwwww.json  <-- your filebase config admin
+```
 
 .env.development
 ```
