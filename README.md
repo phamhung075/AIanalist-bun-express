@@ -20,6 +20,36 @@
 5. **JSON:** Use JSON for data exchange.
 
 ## 🛠️ **Implementation Steps**
+### 0. **environment**
+├── src/
+│   ├── environment/
+│   │   ├── .env.development/
+│   │   ├── .env.production/
+│   │   ├── .env.test/
+│   │   ├── ai-analyst-14876-firebase-adminsdk-euw8h-wwwwwww.json  <-- your filebase config admin
+
+.env.development
+```
+NODE_ENV=development
+PORT=3333
+HOST=localhost
+OPENAI_API_KEY=sk-proj-EGAAmB5Z_w04XSxJBoFagMDFsNMYTQ6-MWjEKuBCwOIQv9AfVjJfb0A-xxxxxxxxxxxxxxxxxxxxxxxxxx
+DATABASE_URI=https://server-default-rtdb.europe-west1.firebasedatabase.app
+TEST_VAR=loaded
+BASE_API=/api
+IP_FRONTEND=192.168.0.1
+
+#Firebase Config
+FIREBASE_API_KEY=AIzaSyCkjEl-xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_AUTH_DOMAIN=xxxxxxxxxxxxxxxxxxxxxxxxxx.firebaseapp.com
+FIREBASE_PROJECT_ID=server-xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_STORAGE_BUCKET=xxxxxxxxxxxxxxxxxxxxxxxxxx.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_APP_ID=1:xxxxxxxxxxxxxxxxxxxxxxxxxx:web:xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_MEASUREMENT_ID=G-xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+```
+
 ### 1. **Router Creation**
 - Use `createRouter(__filename)` for defining routes.
 
