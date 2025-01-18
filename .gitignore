@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# venv
+venv
+.venv
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Build directories
+dist/
+build/
+tmp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Angular
+.angular/
+.angular-cache/
+src/environment/
+environment/*
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Operating system files
+Thumbs.db
+
+#env
+.env
+
+#backup
+backup/
+
+coverage/
+fetch-data/
+logs/
+codesnap
+
+pnpm-lock.yaml
