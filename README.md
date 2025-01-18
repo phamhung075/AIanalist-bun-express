@@ -1,11 +1,12 @@
 # Monolith Modular RESTful API HATEOAS Implementation Guide with Bun, Express.js, and TypeScript
 (on progress)
 ## 📚 **Project Foundation and Tools**
-- **Node.js & Express.js:** Web server framework for handling HTTP requests.
+- **Bun & Express.js:** Web server framework for handling HTTP requests.
 - **TypeScript:** Strong typing and better development experience.
 - **express-route-tracker:** Route management with HATEOAS support.
 - **dotenv:** Environment variable management.
 - **Firebase:** Database and authentication.
+- **Validation:** Zod.
 
 ## 📖 **Key RESTful API Design Principles**
 1. **Resources:** Represent data as resources (e.g., contacts, products).
@@ -20,6 +21,38 @@
 5. **JSON:** Use JSON for data exchange.
 
 ## 🛠️ **Implementation Steps**
+### 0. **environment**
+```
+├── src/
+│   ├── environment/
+│   │   ├── .env.development/
+│   │   ├── .env.production/
+│   │   ├── .env.test/
+│   │   ├── ai-analyst-14876-firebase-adminsdk-euw8h-wwwwwww.json  <-- your filebase config admin
+```
+
+.env.development
+```
+NODE_ENV=development
+PORT=3333
+HOST=localhost
+OPENAI_API_KEY=sk-proj-EGAAmB5Z_w04XSxJBoFagMDFsNMYTQ6-MWjEKuBCwOIQv9AfVjJfb0A-xxxxxxxxxxxxxxxxxxxxxxxxxx
+DATABASE_URI=https://server-default-rtdb.europe-west1.firebasedatabase.app
+TEST_VAR=loaded
+BASE_API=/api
+IP_FRONTEND=192.168.0.1
+
+#Firebase Config
+FIREBASE_API_KEY=AIzaSyCkjEl-xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_AUTH_DOMAIN=xxxxxxxxxxxxxxxxxxxxxxxxxx.firebaseapp.com
+FIREBASE_PROJECT_ID=server-xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_STORAGE_BUCKET=xxxxxxxxxxxxxxxxxxxxxxxxxx.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_APP_ID=1:xxxxxxxxxxxxxxxxxxxxxxxxxx:web:xxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_MEASUREMENT_ID=G-xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+```
+
 ### 1. **Router Creation**
 - Use `createRouter(__filename)` for defining routes.
 
@@ -75,21 +108,37 @@ export default router;
 **Example:**
 ```typescript
 import { Request, Response } from 'express';
-import { RestHandler } from '@/core/helper/http-status/common/RestHandler';
+import _ERROR from "../helper/http-status/error/index.js";
+import _SUCCESS from "../helper/http-status/success/index.js";
 
-export const getExampleData = (req: Request, res: Response) => {
+export const getExampleData = (req: CustomRequest, res: Response, _next: NextFunction) => {
   try {
     const data = { id: 1, name: 'Sample Data' };
-    RestHandler.success(req, res, {
-      data,
-      message: 'Data retrieved successfully'
-    });
+    return new _SUCCESS.OkSuccess({
+                message: 'Fetched entity by ID successfully',
+                data: entity,
+            }).send(res, _next);
   } catch (error) {
-    RestHandler.error(req, res, {
-      message: 'Failed to retrieve data'
-    });
+    _next(error);
   }
 };
+
+
+//example error throw on controller or middleware
+ if (!token) {
+    return new _ERROR.UnauthorizedError({
+      message: "Unauthorized: No token provided",
+    }).send(res, next);
+  }
+
+
+//example error throw
+ if (!token) {
+    return new _ERROR.UnauthorizedError({
+      message: "Unauthorized: No token provided",
+    });
+  }
+
 ```
 - Validate data using `validateSchema(CreateContactSchema)`.
 
