@@ -1,0 +1,40 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"types": ["bun-types"],
+		"allowJs": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"esModuleInterop": true,
+		"outDir": "dist",
+		"rootDir": ".",
+		"baseUrl": ".",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"paths": {
+			"@/*": ["src/*"],
+			"@environment/*": ["environment/*"],
+			"@core/*": ["src/_core/*"],
+			"@config/*": ["src/_core/config/*"],
+			"@database/*": ["src/_core/database/*"],
+			"@modules/*": ["src/modules/*"],
+			"@helper/*": ["src/_core/helper/*"],
+			"@middleware/*": ["src/_core/middleware/*"],
+			"@auth/*": ["src/_core/auth/*"],
+			"@types/*": ["src/types/*"],
+			"@logger/*": ["src/_core/logger/*"],
+			"@server/*": ["src/_core/server/*"]
+		}
+	},
+	"include": [
+		"src/**/*",
+		"environment/**/*",
+		"environment/**/*.json",
+		"check-dirs.js"
+	],
+	"exclude": ["node_modules"]
+}
