@@ -6,6 +6,7 @@
 - **express-route-tracker:** Route management with HATEOAS support.
 - **dotenv:** Environment variable management.
 - **Firebase:** Database and authentication.
+- **Validation:** Zod.
 
 ## 📖 **Key RESTful API Design Principles**
 1. **Resources:** Represent data as resources (e.g., contacts, products).
