@@ -2,28 +2,27 @@ import { firebaseConfig } from "@/_core/config/dotenv.config.js";
 import { firebaseAdminAccount } from "@/_core/config/firebase-admin.account.js";
 import { red, yellow } from "colorette";
 import {
-  App,
-  cert,
-  getApp,
-  getApps,
-  initializeApp as initializeAdminApp,
+    App,
+    cert,
+    getApp,
+    getApps,
+    initializeApp as initializeAdminApp,
 } from "firebase-admin/app";
 import {
-  getAuth as getAdminAuth,
-  Auth as AdminAuth,
-  getAuth,
+    Auth as AdminAuth,
+    getAuth as getAdminAuth,
+    getAuth,
 } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
 import { getFirestore } from "firebase-admin/firestore";
 import {
-  getApps as getClientApps,
-  initializeApp as initializeClientApp,
-  getApp as getClientApp,
-  FirebaseApp,
+    FirebaseApp,
+    getApp as getClientApp,
+    getApps as getClientApps,
+    initializeApp as initializeClientApp,
 } from "firebase/app";
-import { getAuth as getClientAuth } from "firebase/auth";
 import type { Auth as ClientAuth } from "firebase/auth";
-import { initAuthStateObserver } from "./firebase-admin-utility";
+import { getAuth as getClientAuth } from "firebase/auth";
 
 let firebaseAdminApp: App;
 let firebaseClientApp: FirebaseApp;
@@ -56,8 +55,6 @@ try {
   if (!getClientApps().length) {
     firebaseClientApp = initializeClientApp(firebaseConfig);
     firebaseClientAuth = getClientAuth(firebaseClientApp);
-    // Initialize auth state observer
-    initAuthStateObserver();
     console.log(yellow("✅ Firebase Client initialized"));
   } else {
     firebaseClientApp = getClientApp();
@@ -99,11 +96,12 @@ async function checkUser(app: App) {
 }
 
 export {
-  database,
-  firebaseAdminApp,
-  firebaseAdminAuth,
-  firebaseClientApp,
-  firebaseClientAuth,
-  firestore,
-  testFirestoreAccess,
+    database,
+    firebaseAdminApp,
+    firebaseAdminAuth,
+    firebaseClientApp,
+    firebaseClientAuth,
+    firestore,
+    testFirestoreAccess
 };
+
