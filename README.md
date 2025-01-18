@@ -171,271 +171,6 @@ export class ContactService {
 
 ## **Example Postman response**
 
-```
-{
-    "success": true,
-    "code": 200,
-    "message": "Get contact by id successfully",
-    "data": {
-        "id": "yQg9OD4KRTNywa2fHwxN",
-        "name": "Jett Zboncak",
-        "email": "test.email19214@yopmail.com",
-        "phone": "06 26 73 76 92",
-        "message": "Interested in your services",
-        "createdAt": {
-            "_seconds": 1735267038,
-            "_nanoseconds": 739000000
-        },
-        "updatedAt": {
-            "_seconds": 1735267038,
-            "_nanoseconds": 739000000
-        }
-    },
-    "metadata": {
-        "timestamp": "2024-12-29T22:50:17.735Z",
-        "statusCode": "OK",
-        "methode": "GET",
-        "path": "/api/contact/yQg9OD4KRTNywa2fHwxN",
-        "description": "The request has succeeded.",
-        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.3.1"
-    },
-    "links": {
-        "self": {
-            "rel": "self",
-            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
-            "method": "GET"
-        },
-        "create": {
-            "title": "POST /",
-            "rel": "create",
-            "href": "localhost:3333/api/contact/",
-            "method": "POST"
-        },
-        "collection": {
-            "title": "GET /",
-            "rel": "collection",
-            "href": "localhost:3333/api/contact/",
-            "method": "GET"
-        },
-        "item": {
-            "title": "GET /:id",
-            "rel": "item",
-            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
-            "method": "GET"
-        },
-        "update": {
-            "title": "PUT /:id",
-            "rel": "update",
-            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
-            "method": "PUT"
-        },
-        "delete": {
-            "title": "DELETE /:id",
-            "rel": "delete",
-            "href": "localhost:3333/api/contact/yQg9OD4KRTNywa2fHwxN",
-            "method": "DELETE"
-        },
-        "documentation": {
-            "rel": "documentation",
-            "href": "localhost:3333/docs",
-            "method": "GET",
-            "title": "API Documentation"
-        }
-    }
-}
-```
-
-
-Validation error
-```
-{
-    "success": false,
-    "code": 400,
-    "message": "Validation Error",
-    "errors": [
-        {
-            "field": "password",
-            "message": "Password must be at least 8 characters long"
-        },
-        {
-            "field": "password",
-            "message": "Password must contain at least one lowercase letter"
-        },
-        {
-            "field": "password",
-            "message": "Password must contain at least one uppercase letter"
-        },
-        {
-            "field": "password",
-            "message": "Password must contain at least one special character"
-        }
-    ],
-    "metadata": {
-        "timestamp": "2024-12-30T14:36:52.645Z",
-        "statusCode": "BAD_REQUEST",
-        "description": "The server could not understand the request due to invalid syntax.",
-        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.5.1"
-    },
-    "links": {
-        "self": {
-            "rel": "self",
-            "href": "localhost:3333/api/auth/registre",
-            "method": "POST"
-        },
-        "post-registre": {
-            "title": "POST /registre",
-            "rel": "post-registre",
-            "href": "localhost:3333/registre",
-            "method": "POST"
-        },
-        "documentation": {
-            "rel": "documentation",
-            "href": "localhost:3333/docs",
-            "method": "GET",
-            "title": "API Documentation"
-        }
-    }
-}
-```
-
-```
-
-Directory structure:
-├── src/
-│   ├── _core/
-│   │   ├── auth/
-│   │   │   ├── strategies/
-│   │   │   │   └── jwt.strategy.ts
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── auth.dto.ts
-│   │   │   ├── auth.handler.ts
-│   │   │   ├── auth.interface.ts
-│   │   │   ├── auth.module.ts
-│   │   │   ├── auth.repository.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── auth.validation.ts
-│   │   │   └── index.ts
-│   │   ├── config/
-│   │   │   ├── __specs__/
-│   │   │   │   └── dotenv.config.spec.ts
-│   │   │   ├── dotenv.config.ts
-│   │   │   └── firebase-admin.account.ts
-│   │   ├── database/
-│   │   │   └── firebase-admin-sdk/
-│   │   │       ├── __specs__/
-│   │   │       │   └── firebase-admin-utility.spec.ts
-│   │   │       ├── firebase-admin-utility.ts
-│   │   │       └── index.ts
-│   │   ├── helper/
-│   │   │   ├── asyncHandler/
-│   │   │   │   ├── __tests__/
-│   │   │   │   │   └── asyncHandler.spec.ts
-│   │   │   │   └── index.ts
-│   │   │   ├── check-system-overload/
-│   │   │   │   ├── __tests__/
-│   │   │   │   │   └── check-system-overload.spec.ts
-│   │   │   │   └── check-system-overload.ts
-│   │   │   ├── http-status/
-│   │   │   │   ├── common/
-│   │   │   │   │   ├── __tests__/
-│   │   │   │   │   │   └── createPagination.spec.ts
-│   │   │   │   │   ├── api-config.ts
-│   │   │   │   │   ├── create-pagination.ts
-│   │   │   │   │   ├── HttpStatusCode.ts
-│   │   │   │   │   └── StatusCodes.ts
-│   │   │   │   ├── error/
-│   │   │   │   │   ├── __specs__/
-│   │   │   │   │   │   └── index.spec.ts
-│   │   │   │   │   └── index.ts
-│   │   │   │   ├── success/
-│   │   │   │   │   └── index.ts
-│   │   │   │   └── response-log.ts
-│   │   │   ├── interfaces/
-│   │   │   │   ├── CustomRequest.interface.ts
-│   │   │   │   ├── FetchPageResult.interface.ts
-│   │   │   │   └── rest.interface.ts
-│   │   │   └── validateZodSchema/
-│   │   │       ├── __tests__/
-│   │   │       │   └── validateSchema.spec.ts
-│   │   │       └── index.ts
-│   │   ├── logger/
-│   │   │   ├── __tests__/
-│   │   │   │   └── simple-logger.spec.ts
-│   │   │   └── simple-logger.ts
-│   │   ├── middleware/
-│   │   │   ├── __specs__/
-│   │   │   │   ├── auth.middleware.spec.ts
-│   │   │   │   └── displayRequest.middleware.spec.ts
-│   │   │   ├── auth.middleware.ts
-│   │   │   ├── displayRequest.middleware.ts
-│   │   │   ├── errorHandler.ts
-│   │   │   ├── responseLogger.middleware.ts
-│   │   │   └── start-time.middleware.ts
-│   │   └── server/
-│   │       └── app/
-│   │           ├── __tests__/
-│   │           │   └── app.spec.ts
-│   │           └── app.service.ts
-│   ├── modules/
-│   │   ├── _base/
-│   │   │   └── crud/
-│   │   │       ├── __mocks__/
-│   │   │       │   ├── __specs__/
-│   │   │       │   │   ├── BaseController.mocks.spec.ts
-│   │   │       │   │   ├── BaseRepository.mocks.spec.ts
-│   │   │       │   │   └── BaseService.mocks.spec.ts
-│   │   │       │   ├── BaseController.mocks.ts
-│   │   │       │   ├── BaseRepository.mocks.ts
-│   │   │       │   └── BaseService.mocks.ts
-│   │   │       ├── __specs__/
-│   │   │       │   ├── BaseController.spec.ts
-│   │   │       │   ├── BaseRepository.spec.ts
-│   │   │       │   └── BaseService.spec.ts
-│   │   │       ├── BaseController.ts
-│   │   │       ├── BaseRepository.ts
-│   │   │       └── BaseService.ts
-│   │   ├── contact/
-│   │   │   ├── __tests__/
-│   │   │   │   ├── contact-controller.spec.ts
-│   │   │   │   ├── contact.handle.spec.ts
-│   │   │   │   ├── contact.repository.spec.ts
-│   │   │   │   ├── contact.route.spec.ts
-│   │   │   │   └── contact.service.spec.ts
-│   │   │   ├── contact.controller.ts
-│   │   │   ├── contact.dto.ts
-│   │   │   ├── contact.handler.ts
-│   │   │   ├── contact.interface.ts
-│   │   │   ├── contact.module.ts
-│   │   │   ├── contact.repository.ts
-│   │   │   ├── contact.service.ts
-│   │   │   ├── contact.validation.ts
-│   │   │   └── index.ts
-│   │   └── index.ts
-│   ├── types/
-│   │   └── express.d.ts
-│   └── index.ts
-├── .gitignore
-├── bun.lockb
-├── index.ts
-├── package.json
-├── README.md
-└── tsconfig.json
-
-```
-
-By following these guidelines, you'll have a scalable and efficient RESTful API ready for production. 🚀
-
-> For detailed code examples, check `src/modules/contact` in your project repository.
-
-**Happy Coding! 🧑‍💻**
-
-
-📃 License
-This project is licensed under the MIT License.
-
-
-
-Example postman response
 `POST http://localhost:3333/api/auth/login`
 
 postman: 200 OK
@@ -807,3 +542,139 @@ The request is unauthenticated.
     }
 }
 ```
+
+```
+
+Directory structure:
+├── src/
+│   ├── _core/
+│   │   ├── auth/
+│   │   │   ├── strategies/
+│   │   │   │   └── jwt.strategy.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.dto.ts
+│   │   │   ├── auth.handler.ts
+│   │   │   ├── auth.interface.ts
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.repository.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── auth.validation.ts
+│   │   │   └── index.ts
+│   │   ├── config/
+│   │   │   ├── __specs__/
+│   │   │   │   └── dotenv.config.spec.ts
+│   │   │   ├── dotenv.config.ts
+│   │   │   └── firebase-admin.account.ts
+│   │   ├── database/
+│   │   │   └── firebase-admin-sdk/
+│   │   │       ├── __specs__/
+│   │   │       │   └── firebase-admin-utility.spec.ts
+│   │   │       ├── firebase-admin-utility.ts
+│   │   │       └── index.ts
+│   │   ├── helper/
+│   │   │   ├── asyncHandler/
+│   │   │   │   ├── __tests__/
+│   │   │   │   │   └── asyncHandler.spec.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── check-system-overload/
+│   │   │   │   ├── __tests__/
+│   │   │   │   │   └── check-system-overload.spec.ts
+│   │   │   │   └── check-system-overload.ts
+│   │   │   ├── http-status/
+│   │   │   │   ├── common/
+│   │   │   │   │   ├── __tests__/
+│   │   │   │   │   │   └── createPagination.spec.ts
+│   │   │   │   │   ├── api-config.ts
+│   │   │   │   │   ├── create-pagination.ts
+│   │   │   │   │   ├── HttpStatusCode.ts
+│   │   │   │   │   └── StatusCodes.ts
+│   │   │   │   ├── error/
+│   │   │   │   │   ├── __specs__/
+│   │   │   │   │   │   └── index.spec.ts
+│   │   │   │   │   └── index.ts
+│   │   │   │   ├── success/
+│   │   │   │   │   └── index.ts
+│   │   │   │   └── response-log.ts
+│   │   │   ├── interfaces/
+│   │   │   │   ├── CustomRequest.interface.ts
+│   │   │   │   ├── FetchPageResult.interface.ts
+│   │   │   │   └── rest.interface.ts
+│   │   │   └── validateZodSchema/
+│   │   │       ├── __tests__/
+│   │   │       │   └── validateSchema.spec.ts
+│   │   │       └── index.ts
+│   │   ├── logger/
+│   │   │   ├── __tests__/
+│   │   │   │   └── simple-logger.spec.ts
+│   │   │   └── simple-logger.ts
+│   │   ├── middleware/
+│   │   │   ├── __specs__/
+│   │   │   │   ├── auth.middleware.spec.ts
+│   │   │   │   └── displayRequest.middleware.spec.ts
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── displayRequest.middleware.ts
+│   │   │   ├── errorHandler.ts
+│   │   │   ├── responseLogger.middleware.ts
+│   │   │   └── start-time.middleware.ts
+│   │   └── server/
+│   │       └── app/
+│   │           ├── __tests__/
+│   │           │   └── app.spec.ts
+│   │           └── app.service.ts
+│   ├── modules/
+│   │   ├── _base/
+│   │   │   └── crud/
+│   │   │       ├── __mocks__/
+│   │   │       │   ├── __specs__/
+│   │   │       │   │   ├── BaseController.mocks.spec.ts
+│   │   │       │   │   ├── BaseRepository.mocks.spec.ts
+│   │   │       │   │   └── BaseService.mocks.spec.ts
+│   │   │       │   ├── BaseController.mocks.ts
+│   │   │       │   ├── BaseRepository.mocks.ts
+│   │   │       │   └── BaseService.mocks.ts
+│   │   │       ├── __specs__/
+│   │   │       │   ├── BaseController.spec.ts
+│   │   │       │   ├── BaseRepository.spec.ts
+│   │   │       │   └── BaseService.spec.ts
+│   │   │       ├── BaseController.ts
+│   │   │       ├── BaseRepository.ts
+│   │   │       └── BaseService.ts
+│   │   ├── contact/
+│   │   │   ├── __tests__/
+│   │   │   │   ├── contact-controller.spec.ts
+│   │   │   │   ├── contact.handle.spec.ts
+│   │   │   │   ├── contact.repository.spec.ts
+│   │   │   │   ├── contact.route.spec.ts
+│   │   │   │   └── contact.service.spec.ts
+│   │   │   ├── contact.controller.ts
+│   │   │   ├── contact.dto.ts
+│   │   │   ├── contact.handler.ts
+│   │   │   ├── contact.interface.ts
+│   │   │   ├── contact.module.ts
+│   │   │   ├── contact.repository.ts
+│   │   │   ├── contact.service.ts
+│   │   │   ├── contact.validation.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── types/
+│   │   └── express.d.ts
+│   └── index.ts
+├── .gitignore
+├── bun.lockb
+├── index.ts
+├── package.json
+├── README.md
+└── tsconfig.json
+
+```
+
+By following these guidelines, you'll have a scalable and efficient RESTful API ready for production. 🚀
+
+> For detailed code examples, check `src/modules/contact` in your project repository.
+
+**Happy Coding! 🧑‍💻**
+
+
+📃 License
+This project is licensed under the MIT License.
+
