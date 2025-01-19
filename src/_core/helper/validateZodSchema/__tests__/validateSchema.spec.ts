@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { validateDTO } from "..";
 import { HttpStatusCode } from "../../http-status/common/HttpStatusCode";
 
-
 describe('validateDTO', () => {
   const testSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -34,7 +33,6 @@ describe('validateDTO', () => {
     mockNext = mock();
   });
 
-  // ✅ Test Case 1: Valid Data
   test('should pass validation with valid data', () => {
     const middleware = validateDTO(testSchema);
     middleware(mockRequest, mockResponse, mockNext);
@@ -44,7 +42,6 @@ describe('validateDTO', () => {
     expect(mockResponse.json).not.toHaveBeenCalled();
   });
 
-  // ✅ Test Case 2: Invalid Email
   test('should return ErrorResponse with invalid email', () => {
     mockRequest.body.email = 'invalid-email';
     
@@ -52,21 +49,26 @@ describe('validateDTO', () => {
     middleware(mockRequest, mockResponse, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: HttpStatusCode.BAD_REQUEST,
-        message: 'Validation Error',
-        errors: [
-          expect.objectContaining({
-            field: 'email',
-            message: 'Invalid email format',
-          }),
-        ],
-      })
-    );
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Validation Error',
+      error: true,
+      metadata: {
+        description: 'The server could not understand the request due to invalid syntax.',
+        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
+        timestamp: expect.any(String),
+        code: HttpStatusCode.BAD_REQUEST,
+        status: 'BAD_REQUEST'
+      },
+      errors: [
+        {
+          field: 'email',
+          message: 'Invalid email format'
+        }
+      ]
+    });
   });
 
-  // ✅ Test Case 3: Multiple Validation Errors
   test('should handle multiple validation errors', () => {
     mockRequest.body = {
       name: 'J',
@@ -78,20 +80,34 @@ describe('validateDTO', () => {
     middleware(mockRequest, mockResponse, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: HttpStatusCode.BAD_REQUEST,
-        message: 'Validation Error',
-        errors: expect.arrayContaining([
-          expect.objectContaining({ field: 'name', message: 'Name must be at least 2 characters' }),
-          expect.objectContaining({ field: 'email', message: 'Invalid email format' }),
-          expect.objectContaining({ field: 'age', message: 'Age must be at least 18' }),
-        ]),
-      })
-    );
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Validation Error',
+      error: true,
+      metadata: {
+        description: 'The server could not understand the request due to invalid syntax.',
+        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
+        timestamp: expect.any(String),
+        code: HttpStatusCode.BAD_REQUEST,
+        status: 'BAD_REQUEST'
+      },
+      errors: [
+        {
+          field: 'name',
+          message: 'Name must be at least 2 characters'
+        },
+        {
+          field: 'email',
+          message: 'Invalid email format'
+        },
+        {
+          field: 'age',
+          message: 'Age must be at least 18'
+        }
+      ]
+    });
   });
 
-  // ✅ Test Case 4: Non-Zod Errors
   test('should handle non-Zod errors', () => {
     const error = new Error('Test error');
     const mockSchema = {
@@ -104,7 +120,6 @@ describe('validateDTO', () => {
     expect(mockNext).toHaveBeenCalledWith(error);
   });
 
-  // ✅ Test Case 5: Nested Field Validation Errors
   test('should handle nested field validation errors', () => {
     const nestedSchema = z.object({
       user: z.object({
@@ -126,21 +141,26 @@ describe('validateDTO', () => {
     middleware(mockRequest, mockResponse, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: HttpStatusCode.BAD_REQUEST,
-        message: 'Validation Error',
-        errors: [
-          expect.objectContaining({
-            field: 'user.profile.name',
-            message: 'Name must be at least 2 characters',
-          }),
-        ],
-      })
-    );
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Validation Error',
+      error: true,
+      metadata: {
+        description: 'The server could not understand the request due to invalid syntax.',
+        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
+        timestamp: expect.any(String),
+        code: HttpStatusCode.BAD_REQUEST,
+        status: 'BAD_REQUEST'
+      },
+      errors: [
+        {
+          field: 'user.profile.name',
+          message: 'Name must be at least 2 characters'
+        }
+      ]
+    });
   });
 
-  // ✅ Test Case 6: Testing Different Request Types (body, params, query)
   test('should validate query parameters', () => {
     const querySchema = z.object({
       page: z.number().min(1, 'Page must be at least 1'),
@@ -152,15 +172,23 @@ describe('validateDTO', () => {
     middleware(mockRequest, mockResponse, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        errors: [
-          expect.objectContaining({
-            field: 'page',
-            message: 'Page must be at least 1',
-          }),
-        ],
-      })
-    );
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Validation Error',
+      error: true,
+      metadata: {
+        description: 'The server could not understand the request due to invalid syntax.',
+        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
+        timestamp: expect.any(String),
+        code: HttpStatusCode.BAD_REQUEST,
+        status: 'BAD_REQUEST'
+      },
+      errors: [
+        {
+          field: 'page',
+          message: 'Page must be at least 1'
+        }
+      ]
+    });
   });
 });

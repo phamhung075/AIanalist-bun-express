@@ -1,10 +1,6 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { faker } from '@faker-js/faker';
 import { BaseService } from "../BaseService";
-import {
-  createMockRepository,
-  MockedBaseRepository,
-} from "../__mocks__/BaseRepository.mocks";
 import { FetchPageResult } from "@/_core/helper/interfaces/FetchPageResult.interface";
 
 // Test interfaces
@@ -21,17 +17,26 @@ class TestService extends BaseService<TestEntity> {}
 
 describe("BaseService", () => {
   let service: TestService;
-  let mockRepository: MockedBaseRepository<TestEntity>;
+  let mockRepository: any;
   let testData: Omit<TestEntity, "id">;
 
   beforeEach(() => {
-    mockRepository = createMockRepository<TestEntity>();
-    service = new TestService(mockRepository as any);
+    mockRepository = {
+      create: mock(() => Promise.resolve()),
+      createWithId: mock(() => Promise.resolve()),
+      getAll: mock(() => Promise.resolve()),
+      getById: mock(() => Promise.resolve()),
+      update: mock(() => Promise.resolve()),
+      delete: mock(() => Promise.resolve()),
+      paginator: mock(() => Promise.resolve())
+    };
+
+    service = new TestService(mockRepository);
     
     // Generate fake test data
     testData = {
       name: faker.person.fullName(),
-      email: faker.internet.email(),
+      email: faker.internet.email()
     };
   });
 
@@ -41,12 +46,10 @@ describe("BaseService", () => {
         id: faker.string.uuid(),
         ...testData,
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.recent()
       };
 
-      mockRepository.create.mockImplementation(() =>
-        Promise.resolve(expectedEntity)
-      );
+      mockRepository.create.mockImplementation(() => Promise.resolve(expectedEntity));
 
       const result = await service.create(testData);
 
@@ -56,11 +59,11 @@ describe("BaseService", () => {
     });
 
     test("should handle creation failure", async () => {
-      mockRepository.create.mockImplementation(() =>
-        Promise.reject(new Error("Creation failed"))
-      );
+      const error = new Error("Creation failed");
+      mockRepository.create.mockImplementation(() => Promise.reject(error));
 
       await expect(service.create(testData)).rejects.toThrow("Creation failed");
+      expect(mockRepository.create).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -71,18 +74,25 @@ describe("BaseService", () => {
         id: testId,
         ...testData,
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.recent()
       };
 
-      mockRepository.createWithId.mockImplementation(() =>
-        Promise.resolve(expectedEntity)
-      );
+      mockRepository.createWithId.mockImplementation(() => Promise.resolve(expectedEntity));
 
       const result = await service.createWithId(testId, testData);
 
       expect(result).toEqual(expectedEntity);
       expect(mockRepository.createWithId).toHaveBeenCalledTimes(1);
       expect(mockRepository.createWithId).toHaveBeenCalledWith(testId, testData);
+    });
+
+    test("should handle createWithId failure", async () => {
+      const testId = faker.string.uuid();
+      const error = new Error("Creation with ID failed");
+      mockRepository.createWithId.mockImplementation(() => Promise.reject(error));
+
+      await expect(service.createWithId(testId, testData)).rejects.toThrow("Creation with ID failed");
+      expect(mockRepository.createWithId).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -93,12 +103,10 @@ describe("BaseService", () => {
         name: faker.person.fullName(),
         email: faker.internet.email(),
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.recent()
       }));
 
-      mockRepository.getAll.mockImplementation(() =>
-        Promise.resolve(expectedEntities)
-      );
+      mockRepository.getAll.mockImplementation(() => Promise.resolve(expectedEntities));
 
       const result = await service.getAll();
 
@@ -114,6 +122,14 @@ describe("BaseService", () => {
       expect(result).toEqual([]);
       expect(mockRepository.getAll).toHaveBeenCalledTimes(1);
     });
+
+    test("should handle getAll failure", async () => {
+      const error = new Error("Fetch failed");
+      mockRepository.getAll.mockImplementation(() => Promise.reject(error));
+
+      await expect(service.getAll()).rejects.toThrow("Fetch failed");
+      expect(mockRepository.getAll).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("getById", () => {
@@ -124,12 +140,10 @@ describe("BaseService", () => {
         name: faker.person.fullName(),
         email: faker.internet.email(),
         createdAt: faker.date.recent(),
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.recent()
       };
 
-      mockRepository.getById.mockImplementation(() =>
-        Promise.resolve(expectedEntity)
-      );
+      mockRepository.getById.mockImplementation(() => Promise.resolve(expectedEntity));
 
       const result = await service.getById(testId);
 
@@ -147,6 +161,15 @@ describe("BaseService", () => {
       expect(result).toBeNull();
       expect(mockRepository.getById).toHaveBeenCalledTimes(1);
     });
+
+    test("should handle getById failure", async () => {
+      const testId = faker.string.uuid();
+      const error = new Error("Fetch by ID failed");
+      mockRepository.getById.mockImplementation(() => Promise.reject(error));
+
+      await expect(service.getById(testId)).rejects.toThrow("Fetch by ID failed");
+      expect(mockRepository.getById).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("update", () => {
@@ -154,18 +177,16 @@ describe("BaseService", () => {
       const testId = faker.string.uuid();
       const updateData = {
         name: faker.person.fullName(),
-        email: faker.internet.email(),
+        email: faker.internet.email()
       };
 
       const expectedEntity: TestEntity = {
         id: testId,
         ...updateData,
-        updatedAt: faker.date.recent(),
+        updatedAt: faker.date.recent()
       };
 
-      mockRepository.update.mockImplementation(() =>
-        Promise.resolve(expectedEntity)
-      );
+      mockRepository.update.mockImplementation(() => Promise.resolve(expectedEntity));
 
       const result = await service.update(testId, updateData);
 
@@ -177,7 +198,7 @@ describe("BaseService", () => {
     test("should handle update of non-existent entity", async () => {
       const testId = faker.string.uuid();
       const updateData = {
-        name: faker.person.fullName(),
+        name: faker.person.fullName()
       };
 
       mockRepository.update.mockImplementation(() => Promise.resolve(null));
@@ -185,6 +206,15 @@ describe("BaseService", () => {
       const result = await service.update(testId, updateData);
 
       expect(result).toBeNull();
+      expect(mockRepository.update).toHaveBeenCalledTimes(1);
+    });
+
+    test("should handle update failure", async () => {
+      const testId = faker.string.uuid();
+      const error = new Error("Update failed");
+      mockRepository.update.mockImplementation(() => Promise.reject(error));
+
+      await expect(service.update(testId, {})).rejects.toThrow("Update failed");
       expect(mockRepository.update).toHaveBeenCalledTimes(1);
     });
   });
@@ -210,6 +240,15 @@ describe("BaseService", () => {
       expect(result).toBe(false);
       expect(mockRepository.delete).toHaveBeenCalledTimes(1);
     });
+
+    test("should handle delete failure", async () => {
+      const testId = faker.string.uuid();
+      const error = new Error("Delete failed");
+      mockRepository.delete.mockImplementation(() => Promise.reject(error));
+
+      await expect(service.delete(testId)).rejects.toThrow("Delete failed");
+      expect(mockRepository.delete).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("paginator", () => {
@@ -217,94 +256,68 @@ describe("BaseService", () => {
       const options = {
         page: faker.number.int({ min: 1, max: 5 }),
         limit: faker.number.int({ min: 5, max: 20 }),
-        all: false,
+        all: false
       };
 
       const mockData = Array.from({ length: 2 }, () => ({
         id: faker.string.uuid(),
         name: faker.person.fullName(),
-        email: faker.internet.email(),
+        email: faker.internet.email()
       }));
 
-      const repositoryResult = {
+      const expectedResult: FetchPageResult<TestEntity> = {
         data: mockData,
         totalItems: mockData.length,
         count: mockData.length,
         page: options.page,
         limit: options.limit,
-        totalPages: 1,
+        totalPages: 1
       };
 
-      mockRepository.paginator.mockImplementation(() =>
-        Promise.resolve(repositoryResult)
-      );
+      mockRepository.paginator.mockImplementation(() => Promise.resolve(expectedResult));
 
       const result = await service.paginator(options);
 
-      expect(result).toEqual(repositoryResult);
-      expect(mockRepository.paginator).toHaveBeenCalledWith(expect.objectContaining({
-        all: false
-      }));
+      expect(result).toEqual(expectedResult);
+      expect(mockRepository.paginator).toHaveBeenCalledWith(options);
     });
 
     test("should handle empty paginated results", async () => {
       const options = {
         page: faker.number.int({ min: 1, max: 5 }),
         limit: faker.number.int({ min: 5, max: 20 }),
-        all: false,
+        all: false
       };
 
-      const repositoryResult: FetchPageResult<TestEntity> = {
+      const emptyResult: FetchPageResult<TestEntity> = {
         data: [],
         totalItems: 0,
         count: 0,
         page: options.page,
         limit: options.limit,
-        totalPages: 0,
+        totalPages: 0
       };
 
-      mockRepository.paginator.mockImplementation(() =>
-        Promise.resolve(repositoryResult)
-      );
+      mockRepository.paginator.mockImplementation(() => Promise.resolve(emptyResult));
 
       const result = await service.paginator(options);
 
-      expect(result).toEqual(repositoryResult);
+      expect(result).toEqual(emptyResult);
       expect(mockRepository.paginator).toHaveBeenCalledTimes(1);
     });
 
-    test("should handle all=true parameter", async () => {
+    test("should handle paginator failure", async () => {
       const options = {
-        page: faker.number.int({ min: 1, max: 5 }),
-        limit: faker.number.int({ min: 5, max: 20 }),
-        all: true,
+        page: 1,
+        limit: 10,
+        all: false
       };
 
-      const mockData = Array.from({ length: 2 }, () => ({
-        id: faker.string.uuid(),
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-      }));
+      const error = new Error("Pagination failed");
+      mockRepository.paginator.mockImplementation(() => Promise.reject(error));
 
-      const repositoryResult = {
-        data: mockData,
-        totalItems: mockData.length,
-        count: mockData.length,
-        page: options.page,
-        limit: options.limit,
-        totalPages: 1,
-      };
-
-      mockRepository.paginator.mockImplementation(() =>
-        Promise.resolve(repositoryResult)
-      );
-
-      const result = await service.paginator(options);
-
-      expect(result).toEqual(repositoryResult);
-      expect(mockRepository.paginator).toHaveBeenCalledWith(expect.objectContaining({
-        all: true
-      }));
+      await expect(service.paginator(options)).rejects.toThrow("Pagination failed");
+      expect(mockRepository.paginator).toHaveBeenCalledTimes(1);
     });
   });
 });
