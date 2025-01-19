@@ -8,6 +8,7 @@
     "strict": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "rootDir": ".",
