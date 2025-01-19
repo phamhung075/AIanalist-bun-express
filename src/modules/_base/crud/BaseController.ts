@@ -35,7 +35,7 @@ export abstract class BaseController<
             return new _SUCCESS.CreatedSuccess({
                 message: 'Entity created successfully',
                 data: entity,
-            });
+            }).send(res, _next);
         } catch (error) {
             _next(error);
         }

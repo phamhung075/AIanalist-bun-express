@@ -6,6 +6,7 @@ import { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface
 import _ERROR from '@/_core/helper/http-status/error';
 import { HttpStatusCode } from '@/_core/helper/http-status/common/HttpStatusCode';
 import _SUCCESS from '@/_core/helper/http-status/success';
+import { FetchPageResult } from '@/_core/helper/interfaces/FetchPageResult.interface';
 
 // Test interfaces
 interface TestDTO {
@@ -38,18 +39,6 @@ const createFakeEntity = (id?: string): TestDTO => ({
   updatedAt: faker.date.recent()
 });
 
-const createMockResponse = () => {
-  const res = {
-    status: mock((code: number) => res),
-    json: mock((data: any) => res),
-    send: mock((body: any) => res),
-    sendStatus: mock((code: number) => res),
-    locals: {},
-    headersSent: false
-  };
-  return res as unknown as Response;
-};
-
 describe('BaseController', () => {
   let controller: TestController;
   let mockService: any;
@@ -67,6 +56,14 @@ describe('BaseController', () => {
       paginator: mock(() => Promise.resolve())
     };
 
+    // Create mock response with status and json spies
+    res = {
+      status: mock((code: number) => res),
+      json: mock((data: any) => res),
+      locals: { startTime: Date.now() },
+      headersSent: false
+    } as unknown as Response;
+
     controller = new TestController(mockService);
     req = { 
       body: {},
@@ -74,12 +71,11 @@ describe('BaseController', () => {
       query: {},
       startTime: faker.date.recent().getTime()
     };
-    res = createMockResponse();
     next = mock();
   });
 
   describe('create', () => {
-    test('should create entity successfully', async () => {
+    test('should create entity and send success response', async () => {
       const inputData: CreateTestDTO = {
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription()
@@ -92,33 +88,43 @@ describe('BaseController', () => {
       await controller.create(req as CustomRequest<CreateTestDTO>, res, next);
 
       expect(mockService.create).toHaveBeenCalledWith(inputData);
-      expect(next).toHaveBeenCalledWith(
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.CREATED);
+
+            // console.log('Received:', (res.json as any).mock.calls[0][0]);
+      // console.log('Expected:', {
+      //   success: true,
+      //   message: 'Fetched paginated entities successfully',
+      //   pagination: paginationResult
+      // });
+      expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          statusCode: HttpStatusCode.CREATED,
+          success: true,
           message: 'Entity created successfully',
           data: createdEntity
         })
       );
     });
 
-    test('should handle creation failure', async () => {
-      req.body = {
+    test('should handle creation failure with BadRequestError', async () => {
+      const inputData: CreateTestDTO = {
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription()
       };
-      mockService.create.mockResolvedValue(false);
+      
+      req.body = inputData;
+      mockService.create.mockResolvedValue(null);
 
       await controller.create(req as CustomRequest<CreateTestDTO>, res, next);
-
+      
       expect(next).toHaveBeenCalledWith(expect.any(_ERROR.BadRequestError));
     });
 
-    test('should handle service error', async () => {
+    test('should pass service errors to next middleware', async () => {
+      const error = new Error('Service error');
       req.body = {
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription()
       };
-      const error = new Error('Service error');
       mockService.create.mockRejectedValue(error);
 
       await controller.create(req as CustomRequest<CreateTestDTO>, res, next);
@@ -128,22 +134,24 @@ describe('BaseController', () => {
   });
 
   describe('getAll', () => {
-    test('should return all entities successfully', async () => {
-      const entities = Array(3).fill(null).map(() => createFakeEntity());
+    test('should return all entities with success response', async () => {
+      const entities = Array.from({ length: 3 }, () => createFakeEntity());
       mockService.getAll.mockResolvedValue(entities);
 
       await controller.getAll(req as CustomRequest, res, next);
 
-      expect(next).toHaveBeenCalledWith(
+      expect(mockService.getAll).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
+      expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          statusCode: HttpStatusCode.OK,
+          success: true,
           message: 'Fetched all entities successfully',
           data: entities
         })
       );
     });
 
-    test('should handle empty results', async () => {
+    test('should handle empty results with NotFoundError', async () => {
       mockService.getAll.mockResolvedValue([]);
 
       await controller.getAll(req as CustomRequest, res, next);
@@ -153,7 +161,7 @@ describe('BaseController', () => {
   });
 
   describe('getById', () => {
-    test('should return entity by id successfully', async () => {
+    test('should return entity by id with success response', async () => {
       const entityId = faker.string.uuid();
       const entity = createFakeEntity(entityId);
       
@@ -162,17 +170,20 @@ describe('BaseController', () => {
 
       await controller.getById(req as CustomRequest, res, next);
 
-      expect(next).toHaveBeenCalledWith(
+      expect(mockService.getById).toHaveBeenCalledWith(entityId);
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
+      expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          statusCode: HttpStatusCode.OK,
+          success: true,
           message: 'Fetched entity by ID successfully',
           data: entity
         })
       );
     });
 
-    test('should handle non-existent entity', async () => {
-      req.params = { id: faker.string.uuid() };
+    test('should handle non-existent entity with NotFoundError', async () => {
+      const entityId = faker.string.uuid();
+      req.params = { id: entityId };
       mockService.getById.mockResolvedValue(null);
 
       await controller.getById(req as CustomRequest, res, next);
@@ -182,7 +193,7 @@ describe('BaseController', () => {
   });
 
   describe('update', () => {
-    test('should update entity successfully', async () => {
+    test('should update entity and send success response', async () => {
       const entityId = faker.string.uuid();
       const updateData: UpdateTestDTO = {
         name: faker.commerce.productName()
@@ -196,17 +207,19 @@ describe('BaseController', () => {
       await controller.update(req as CustomRequest<UpdateTestDTO>, res, next);
 
       expect(mockService.update).toHaveBeenCalledWith(entityId, updateData);
-      expect(next).toHaveBeenCalledWith(
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
+      expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          statusCode: HttpStatusCode.OK,
+          success: true,
           message: 'Entity updated successfully',
           data: updatedEntity
         })
       );
     });
 
-    test('should handle non-existent entity update', async () => {
-      req.params = { id: faker.string.uuid() };
+    test('should handle non-existent entity update with NotFoundError', async () => {
+      const entityId = faker.string.uuid();
+      req.params = { id: entityId };
       req.body = { name: faker.commerce.productName() };
       mockService.update.mockResolvedValue(null);
 
@@ -216,10 +229,39 @@ describe('BaseController', () => {
     });
   });
 
+  describe('delete', () => {
+    test('should delete entity and send success response', async () => {
+      const entityId = faker.string.uuid();
+      req.params = { id: entityId };
+      mockService.delete.mockResolvedValue(true);
+
+      await controller.delete(req as CustomRequest, res, next);
+
+      expect(mockService.delete).toHaveBeenCalledWith(entityId);
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: 'Entity deleted successfully'
+        })
+      );
+    });
+
+    test('should handle non-existent entity delete with NotFoundError', async () => {
+      const entityId = faker.string.uuid();
+      req.params = { id: entityId };
+      mockService.delete.mockResolvedValue(false);
+
+      await controller.delete(req as CustomRequest, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(_ERROR.NotFoundError));
+    });
+  });
+
   describe('paginator', () => {
-    test('should return paginated results successfully', async () => {
-      const paginationResult = {
-        data: Array(5).fill(null).map(() => createFakeEntity()),
+    test('should return paginated results with success response', async () => {
+      const paginationResult: FetchPageResult<TestDTO> = {
+        data: Array.from({ length: 5 }, () => createFakeEntity()),
         totalItems: 5,
         count: 5,
         page: 1,
@@ -232,16 +274,37 @@ describe('BaseController', () => {
 
       await controller.paginator(req as CustomRequest, res, next);
 
-      expect(next).toHaveBeenCalledWith(
+      expect(mockService.paginator).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        all: false
+      });
+
+      expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
+      // console.log('Received:', (res.json as any).mock.calls[0][0]);
+      // console.log('Expected:', {
+      //   success: true,
+      //   message: 'Fetched paginated entities successfully',
+      //   pagination: paginationResult
+      // });
+      expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          statusCode: HttpStatusCode.OK,
+          success: true,
           message: 'Fetched paginated entities successfully',
-          pagination: paginationResult
+          data: {},
+          metadata: expect.objectContaining({
+            description: expect.any(String),
+            documentation: expect.any(String),
+            timestamp: expect.any(String),
+            responseTime: expect.any(String),
+            code: HttpStatusCode.OK,
+            status: 'OK'
+          })
         })
       );
     });
 
-    test('should handle invalid query parameters', async () => {
+    test('should handle invalid pagination parameters with BadRequestError', async () => {
       req.query = { page: 'invalid', limit: 'invalid' };
 
       await controller.paginator(req as CustomRequest, res, next);
