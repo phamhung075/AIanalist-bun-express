@@ -7,6 +7,35 @@
 
 ## Quick Start
 
+
+```
+├── src/
+│   ├── environment/
+│   │   ├── .env.test/
+
+NODE_ENV=test
+PORT=3333
+HOST=localhost
+OPENAI_API_KEY=sk-proj-EGAAmB5Z_RqTTlGPvBqSM1PMiZM7Ii0fSMyBKmBChn_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DATABASE_URI=https://xxxxxxxxxxxxxxxxxxxxxxxxxxxx-default-rtdb.europe-west1.firebasedatabase.app
+TEST_VAR=loaded
+BASE_API=/api
+IP_FRONTEND=192.168.0.21 // change to your IP
+
+#Firebase Config
+FIREBASE_API_KEY=AIzaSyCkjEl-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_AUTH_DOMAIN=ai-analyst-xxxxxxxxxxxxxxxxxxxxxxxxxxxx.firebaseapp.com
+FIREBASE_PROJECT_ID=ai-analyst-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_STORAGE_BUCKET=ai-analyst-xxxxxxxxxxxxxxxxxxxxxxxxxxxx.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=926xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_APP_ID=1:xxxxxxxxxxxxxxxxxxxxxxxxxxxx:web:xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FIREBASE_MEASUREMENT_ID=G-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+```
+
 Install Firebase Tools:
 ```bash
 bun install -g firebase-tools
