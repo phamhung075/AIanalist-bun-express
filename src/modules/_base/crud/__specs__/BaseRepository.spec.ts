@@ -128,7 +128,7 @@ describe("BaseRepository", () => {
       };
 
       const updated = await repository.update(original.id!, updateData);
-      expect(updated?.id).toBe(original.id);
+      expect(updated?.id).toBe(original.id!);
       expect(updated?.name).toBe(updateData.name);
       expect(updated?.description).toBe(original.description);
     });
