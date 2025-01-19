@@ -1,8 +1,8 @@
 import { Service } from 'typedi';
-import { BaseController } from '../_base/crud/BaseController.js';
-import type { CreateInput, UpdateInput } from './contact.dto.js';
-import type { IContact } from './contact.interface.js';
-import type ContactService from './contact.service.js';
+import { BaseController } from '../_base/crud/BaseController';
+import type { CreateInput, UpdateInput } from './contact.dto';
+import type { IContact } from './contact.interface';
+import type ContactService from './contact.service';
 
 
 @Service('ContactController')

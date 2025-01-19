@@ -1,4 +1,4 @@
-import { firebaseAuthMiddleware } from '@middleware/auth.middleware.js';
+import { firebaseAuthMiddleware } from '@middleware/auth.middleware';
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 import { dirname, resolve } from "path";

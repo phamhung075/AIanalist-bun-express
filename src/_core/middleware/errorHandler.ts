@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { HttpStatusCode } from '../helper/http-status/common/HttpStatusCode.js';
-import _ERROR from '../helper/http-status/error/index.js';
-import { logResponse } from '../helper/http-status/response-log.js';
+import { HttpStatusCode } from '../helper/http-status/common/HttpStatusCode';
+import _ERROR from '../helper/http-status/error/index';
+import { logResponse } from '../helper/http-status/response-log';
 
 // Not Found Handler Middleware
 export const notFoundMiddleware = (req: Request, res: Response, next: NextFunction) => {

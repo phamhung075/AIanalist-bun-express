@@ -1,8 +1,8 @@
 // src/modules/contact/contact.module.ts
 import { Container } from 'typedi';
-import ContactController from './contact.controller.js';
-import ContactRepository from './contact.repository.js';
-import ContactService from './contact.service.js';
+import ContactController from './contact.controller';
+import ContactRepository from './contact.repository';
+import ContactService from './contact.service';
 
 
 class ContactModule {

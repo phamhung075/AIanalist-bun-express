@@ -1,7 +1,7 @@
-import { validateDTO } from '@/_core/helper/validateZodSchema/index.js';
+import { validateDTO } from '@/_core/helper/validateZodSchema/index';
 import type { NextFunction, Request, Response } from 'express';
-import { CreateSchema, IdSchema, UpdateSchema } from './contact.validation.js';
-import { contactController } from './contact.module.js';
+import { CreateSchema, IdSchema, UpdateSchema } from './contact.validation';
+import { contactController } from './contact.module';
 
 
 

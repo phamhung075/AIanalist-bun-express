@@ -1,10 +1,10 @@
 
 
 import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
-import { asyncHandler } from '@/_core/helper/asyncHandler/index.js';
-import { config } from '@/_core/config/dotenv.config.js';
-import { validateCreateDTO, createHandler, getAllsHandler, validateIdDTO, getByIdHandler, updateHandler, validateUpdateDTO, deleteHandler } from './contact.handler.js';
-import { firebaseAuthMiddleware } from '@/_core/middleware/auth.middleware.js';
+import { asyncHandler } from '@/_core/helper/asyncHandler/index';
+import { config } from '@/_core/config/dotenv.config';
+import { validateCreateDTO, createHandler, getAllsHandler, validateIdDTO, getByIdHandler, updateHandler, validateUpdateDTO, deleteHandler } from './contact.handler';
+import { firebaseAuthMiddleware } from '@/_core/middleware/auth.middleware';
 
 // Create router with source tracking
 const router = createRouter(__filename);
