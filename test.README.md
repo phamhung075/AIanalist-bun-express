@@ -152,16 +152,16 @@ bun test --coverage
 --------------------------------------------------------------------------------|---------|---------|-------------------
 File                                                                            | % Funcs | % Lines | Uncovered Line #s
 --------------------------------------------------------------------------------|---------|---------|-------------------
-All files                                                                       |   85.58 |   90.67 |
- src\_core\auth\__specs__\auth.repository.spec.ts                               |  100.00 |   97.52 | 49-50
+All files                                                                       |   90.16 |   95.46 |
+ src\_core\auth\__specs__\auth.repository.spec.ts                               |  100.00 |   98.41 | 49-50
+ src\_core\auth\__specs__\auth.service.spec.ts                                  |  100.00 |  100.00 | 
  src\_core\auth\auth.controller.ts                                              |    0.00 |  100.00 | 
  src\_core\auth\auth.module.ts                                                  |  100.00 |  100.00 | 
- src\_core\auth\auth.repository.ts                                              |   75.00 |   72.56 | 158-202
- src\_core\auth\auth.service.ts                                                 |    0.00 |    5.19 | 13-85
+ src\_core\auth\auth.repository.ts                                              |   84.62 |  100.00 | 
+ src\_core\auth\auth.service.ts                                                 |  100.00 |  100.00 | 
  src\_core\config\__specs__\dotenv.config.spec.ts                               |  100.00 |  100.00 | 
  src\_core\config\dotenv.config.ts                                              |   60.00 |   81.25 | 23,39-42,60-63
  src\_core\config\firebase-admin.account.ts                                     |  100.00 |  100.00 | 
- src\_core\database\firebase-admin-sdk\__specs__\firebase-admin-utility.spec.ts |  100.00 |  100.00 | 
  src\_core\database\firebase-admin-sdk\index.ts                                 |   66.67 |   72.31 | 43-45,48-49,59-61,64-65,79-80,88-93
  src\_core\helper\asyncHandler\__tests__\asyncHandler.spec.ts                   |  100.00 |  100.00 | 
  src\_core\helper\asyncHandler\index.ts                                         |  100.00 |   83.33 | 
@@ -179,9 +179,9 @@ All files                                                                       
  src\_core\helper\validateZodSchema\index.ts                                    |  100.00 |  100.00 | 
  src\_core\logger\__tests__\simple-logger.spec.ts                               |  100.00 |  100.00 | 
  src\_core\logger\simple-logger.ts                                              |  100.00 |  100.00 | 
- src\_core\middleware\__specs__\auth.middleware.spec.ts                         |  100.00 |  100.00 | 
+ src\_core\middleware\__specs__\auth.middleware.spec.ts                         |   89.29 |  100.00 | 
  src\_core\middleware\__specs__\displayRequest.middleware.spec.ts               |   90.00 |   93.06 | 6-8,47
- src\_core\middleware\auth.middleware.ts                                        |    0.00 |   17.95 | 10-11,20-23,27-52
+ src\_core\middleware\auth.middleware.ts                                        |  100.00 |   94.59 | 10-11
  src\_core\middleware\displayRequest.middleware.ts                              |  100.00 |  100.00 | 
  src\_core\middleware\errorHandler.ts                                           |  100.00 |   84.62 | 17,28-30
  src\_core\middleware\responseLogger.middleware.ts                              |  100.00 |  100.00 | 
@@ -189,10 +189,10 @@ All files                                                                       
  src\_core\server\app\__tests__\app.spec.ts                                     |  100.00 |   98.91 | 
  src\_core\server\app\app.service.ts                                            |   72.22 |   87.01 | 203-210,293,307-308,312-313,321-327
  src\modules\_base\crud\BaseController.ts                                       |  100.00 |  100.00 | 
- src\modules\_base\crud\BaseRepository.ts                                       |   88.24 |   78.62 | 52-66,201-216
+ src\modules\_base\crud\BaseRepository.ts                                       |  100.00 |  100.00 | 
  src\modules\_base\crud\BaseService.ts                                          |  100.00 |  100.00 | 
  src\modules\_base\crud\__specs__\BaseController.spec.ts                        |   84.78 |  100.00 | 
- src\modules\_base\crud\__specs__\BaseRepository.spec.ts                        |  100.00 |  100.00 | 
+ src\modules\_base\crud\__specs__\BaseRepository.spec.ts                        |  100.00 |   99.52 | 
  src\modules\_base\crud\__specs__\BaseService.spec.ts                           |   89.47 |  100.00 | 
  src\modules\contact\contact.controller.ts                                      |  100.00 |  100.00 | 
  src\modules\contact\contact.module.ts                                          |  100.00 |  100.00 | 
