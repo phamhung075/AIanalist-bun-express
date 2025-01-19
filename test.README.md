@@ -47,7 +47,7 @@ java -version
 
 ## Emulator Configuration
 
-**Which Firebase emulators do you want to set up? **
+**Which Firebase emulators do you want to set up?**
 - Authentication Emulator
 - Firestore Emulator
 
