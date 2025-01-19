@@ -179,11 +179,8 @@ export class ContactService {
 ### 6. **Repositories**
 - Abstract data access logic (e.g., `contact.repository.ts`).
 
-### 7. **Response Handling**
-- Use `RestHandler.success` for successful responses.
-- Use `RestHandler.error` for error responses.
 
-### 8. **Validation**
+### 7. **Validation**
 - Employ **Zod** for schema-based input validation.
 
 ## 🔗 **HATEOAS Details**
