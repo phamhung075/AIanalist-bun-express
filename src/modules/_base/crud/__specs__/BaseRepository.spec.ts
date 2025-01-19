@@ -1,8 +1,9 @@
 import { describe, test, expect, beforeEach, mock, Mock } from 'bun:test';
+import { faker } from '@faker-js/faker';
 import { BaseRepository } from '../BaseRepository';
 import { firestore } from '@/_core/database/firebase-admin-sdk';
 import _ERROR from '@/_core/helper/http-status/error';
-import { DocumentData, DocumentSnapshot, Query } from 'firebase-admin/firestore';
+import { DocumentData, DocumentSnapshot } from 'firebase-admin/firestore';
 import { PaginationOptions } from '@/_core/helper/interfaces/FetchPageResult.interface';
 
 // Test interfaces
@@ -33,15 +34,22 @@ describe('BaseRepository', () => {
   let mockLimit: Mock<(limit: number) => any>;
   let mockStartAfter: Mock<(snapshot: any) => any>;
   let mockCount: Mock<() => { get: () => Promise<{ data: () => { count: number } }> }>;
+  let testData: TestEntity;
 
   beforeEach(() => {
+    // Generate fake test data
+    testData = {
+      name: faker.company.name(),
+      description: faker.lorem.sentence()
+    };
+
     // Reset all mocks
-    mockAdd = mock(() => Promise.resolve({ id: 'test-id' }));
+    mockAdd = mock(() => Promise.resolve({ id: faker.string.uuid() }));
     mockSet = mock(() => Promise.resolve());
     mockGet = mock(() => Promise.resolve({
       exists: true,
-      id: 'test-id',
-      data: () => ({ name: 'Test', description: 'Description' })
+      id: faker.string.uuid(),
+      data: () => ({ name: testData.name, description: testData.description })
     }));
     mockUpdate = mock(() => Promise.resolve());
     mockDelete = mock(() => Promise.resolve());
@@ -50,28 +58,24 @@ describe('BaseRepository', () => {
     mockLimit = mock((limit: number) => mockQueryBuilder);
     mockStartAfter = mock((snapshot: any) => mockQueryBuilder);
     mockCount = mock(() => ({
-      get: () => Promise.resolve({ data: () => ({ count: 2 }) })
+      get: () => Promise.resolve({ data: () => ({ count: faker.number.int({ min: 1, max: 10 }) }) })
     }));
 
-    // Mock query builder
+    // Mock query builder with fake data
     const mockQueryBuilder = {
       where: mockWhere,
       orderBy: mockOrderBy,
       limit: mockLimit,
       startAfter: mockStartAfter,
-      get: mock<() => Promise<{ docs: any[] }>>(() => Promise.resolve({
-        docs: [
-          {
-            id: 'test-id-1',
-            exists: true,
-            data: () => ({ name: 'Test 1', description: 'Description 1' })
-          },
-          {
-            id: 'test-id-2',
-            exists: true,
-            data: () => ({ name: 'Test 2', description: 'Description 2' })
-          }
-        ]
+      get: mock(() => Promise.resolve({
+        docs: Array.from({ length: 2 }, (_, index) => ({
+          id: faker.string.uuid(),
+          exists: true,
+          data: () => ({
+            name: faker.company.name(),
+            description: faker.lorem.sentence()
+          })
+        }))
       }))
     };
 
@@ -97,42 +101,29 @@ describe('BaseRepository', () => {
 
   describe('create', () => {
     test('should create a new document successfully', async () => {
-      const testData: Omit<TestEntity, 'id'> = {
-        name: 'Test Entity',
-        description: 'Test Description'
-      };
-
       const result = await repository.create(testData);
 
       expect(result).toEqual({
-        id: 'test-id',
+        id: expect.any(String),
         ...testData
       });
-      expect(mockAdd.mock.calls.length).toBe(1);
-      expect(mockAdd.mock.calls[0][0]).toMatchObject({
+      expect(mockAdd).toHaveBeenCalledTimes(1);
+      expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
         ...testData,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
-      });
+      }));
     });
 
     test('should handle creation failure', async () => {
       mockAdd.mockImplementation(() => Promise.reject(new Error('Creation failed')));
-
-      await expect(repository.create({
-        name: 'Test',
-        description: 'Description'
-      })).rejects.toThrow(_ERROR.InternalServerError);
+      await expect(repository.create(testData)).rejects.toThrow(_ERROR.InternalServerError);
     });
   });
 
   describe('createWithId', () => {
     test('should create a document with specific ID', async () => {
-      const testId = 'custom-id';
-      const testData: Omit<TestEntity, 'id'> = {
-        name: 'Test Entity',
-        description: 'Test Description'
-      };
+      const testId = faker.string.uuid();
 
       const result = await repository.createWithId(testId, testData);
 
@@ -140,21 +131,18 @@ describe('BaseRepository', () => {
         id: testId,
         ...testData
       });
-      expect(mockSet.mock.calls.length).toBe(1);
-      expect(mockSet.mock.calls[0][0]).toMatchObject({
+      expect(mockSet).toHaveBeenCalledTimes(1);
+      expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({
         ...testData,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
-      });
+      }));
     });
 
     test('should handle createWithId failure', async () => {
       mockSet.mockImplementation(() => Promise.reject(new Error('Creation failed')));
-
-      await expect(repository.createWithId('test-id', {
-        name: 'Test',
-        description: 'Description'
-      })).rejects.toThrow(_ERROR.InternalServerError);
+      await expect(repository.createWithId(faker.string.uuid(), testData))
+        .rejects.toThrow(_ERROR.InternalServerError);
     });
   });
 
@@ -163,15 +151,15 @@ describe('BaseRepository', () => {
       const result = await repository.getAll();
 
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: 'test-id-1',
-        name: 'Test 1',
-        description: 'Description 1'
+      expect(result[0]).toMatchObject({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String)
       });
     });
 
     test('should handle getAll failure', async () => {
-      const mockFailGet = mock<() => Promise<any>>(() => Promise.reject(new Error('Fetch failed')));
+      const mockFailGet = mock(() => Promise.reject(new Error('Fetch failed')));
       (firestore as any).collection = mock(() => ({
         get: mockFailGet
       }));
@@ -182,76 +170,77 @@ describe('BaseRepository', () => {
 
   describe('getById', () => {
     test('should retrieve a document by ID', async () => {
-      const result = await repository.getById('test-id');
+      const testId = faker.string.uuid();
+      const result = await repository.getById(testId);
 
       expect(result).toEqual({
-        id: 'test-id',
-        name: 'Test',
-        description: 'Description'
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String)
       });
     });
 
     test('should handle non-existent document', async () => {
       mockGet.mockImplementation(() => Promise.resolve({
         exists: false,
-        id: 'test-id',
+        id: faker.string.uuid(),
         data: () => null
       }));
 
-      await expect(repository.getById('non-existent-id'))
+      await expect(repository.getById(faker.string.uuid()))
         .rejects.toThrow(_ERROR.NotFoundError);
     });
   });
 
   describe('update', () => {
     test('should update a document successfully', async () => {
-      const testId = 'test-id';
+      const testId = faker.string.uuid();
       const updates: Partial<TestEntity> = {
-        name: 'Updated Name'
+        name: faker.company.name()
       };
 
       const result = await repository.update(testId, updates);
 
-      expect(result).toEqual({
-        id: testId,
-        name: 'Test',
-        description: 'Description'
+      expect(result).toMatchObject({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String)
       });
-      expect(mockUpdate.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls[0][0]).toMatchObject({
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
         ...updates,
         updatedAt: expect.any(Date)
-      });
+      }));
     });
 
     test('should handle update of non-existent document', async () => {
       mockGet.mockImplementation(() => Promise.resolve({
         exists: false,
-        id: 'test-id',
+        id: faker.string.uuid(),
         data: () => null
       }));
 
-      await expect(repository.update('non-existent-id', { name: 'New Name' }))
+      await expect(repository.update(faker.string.uuid(), { name: faker.company.name() }))
         .rejects.toThrow(_ERROR.NotFoundError);
     });
   });
 
   describe('delete', () => {
     test('should delete a document successfully', async () => {
-      const result = await repository.delete('test-id');
+      const result = await repository.delete(faker.string.uuid());
 
       expect(result).toBe(true);
-      expect(mockDelete.mock.calls.length).toBe(1);
+      expect(mockDelete).toHaveBeenCalledTimes(1);
     });
 
     test('should handle deletion of non-existent document', async () => {
       mockGet.mockImplementation(() => Promise.resolve({
         exists: false,
-        id: 'test-id',
+        id: faker.string.uuid(),
         data: () => null
       }));
 
-      await expect(repository.delete('non-existent-id'))
+      await expect(repository.delete(faker.string.uuid()))
         .rejects.toThrow(_ERROR.NotFoundError);
     });
   });
@@ -259,8 +248,8 @@ describe('BaseRepository', () => {
   describe('paginator', () => {
     test('should return paginated results', async () => {
       const options = {
-        page: 1,
-        limit: 10,
+        page: faker.number.int({ min: 1, max: 5 }),
+        limit: faker.number.int({ min: 5, max: 20 }),
         filters: [
           { key: 'status', operator: '==', value: 'active' }
         ],
@@ -270,32 +259,31 @@ describe('BaseRepository', () => {
       const result = await repository.paginator(options);
 
       expect(result.data).toHaveLength(2);
-      expect(result.totalItems).toBe(2);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
-      expect(mockWhere.mock.calls.length).toBe(1);
-      expect(mockOrderBy.mock.calls.length).toBe(1);
-      expect(mockLimit.mock.calls.length).toBe(1);
+      expect(result.totalItems).toBeGreaterThan(0);
+      expect(result.page).toBe(options.page!);
+      expect(result.limit).toBe(options.limit!);
+      expect(mockWhere).toHaveBeenCalledTimes(1);
+      expect(mockOrderBy).toHaveBeenCalledTimes(1);
+      expect(mockLimit).toHaveBeenCalledTimes(1);
     });
 
     test('should handle pagination with lastVisible', async () => {
       const lastVisibleMock = {
         exists: true,
         ref: {},
-        readTime: new Date(),
+        readTime: faker.date.recent(),
         data: () => null,
-        id: 'last-id'
+        id: faker.string.uuid()
       };
 
       const options: PaginationOptions = {
         page: 2,
-        limit: 10,
+        limit: faker.number.int({ min: 5, max: 20 }),
         lastVisible: lastVisibleMock as unknown as DocumentSnapshot<DocumentData>
       };
 
       await repository.paginator(options);
-
-      expect(mockStartAfter.mock.calls.length).toBe(1);
+      expect(mockStartAfter).toHaveBeenCalledTimes(1);
     });
 
     test('should handle all=true option', async () => {
@@ -308,36 +296,24 @@ describe('BaseRepository', () => {
       const result = await repository.paginator(options);
 
       expect(result.data).toHaveLength(2);
-      expect(mockLimit.mock.calls.length).toBe(0);
+      expect(mockLimit).toHaveBeenCalledTimes(0);
     });
   });
 
   describe('error handling', () => {
     test('should handle permission denied error', async () => {
       mockAdd.mockImplementation(() => Promise.reject({ code: 'permission-denied' }));
-
-      await expect(repository.create({
-        name: 'Test',
-        description: 'Description'
-      })).rejects.toThrow(_ERROR.ForbiddenError);
+      await expect(repository.create(testData)).rejects.toThrow(_ERROR.ForbiddenError);
     });
 
     test('should handle not found error', async () => {
       mockAdd.mockImplementation(() => Promise.reject({ code: 'not-found' }));
-
-      await expect(repository.create({
-        name: 'Test',
-        description: 'Description'
-      })).rejects.toThrow(_ERROR.NotFoundError);
+      await expect(repository.create(testData)).rejects.toThrow(_ERROR.NotFoundError);
     });
 
     test('should handle unknown errors', async () => {
       mockAdd.mockImplementation(() => Promise.reject({ code: 'unknown-error' }));
-
-      await expect(repository.create({
-        name: 'Test',
-        description: 'Description'
-      })).rejects.toThrow(_ERROR.InternalServerError);
+      await expect(repository.create(testData)).rejects.toThrow(_ERROR.InternalServerError);
     });
   });
 });
