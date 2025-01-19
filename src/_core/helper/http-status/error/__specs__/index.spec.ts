@@ -1,17 +1,31 @@
-import { describe, test, expect, beforeEach, mock } from 'bun:test';
+import { describe, test, expect, beforeEach, mock, afterEach } from 'bun:test';
 import { Response } from 'express';
 import _ERROR from '..';
 import { HttpStatusCode } from '../../common/HttpStatusCode';
 
 describe('ErrorResponse', () => {
   let mockRes: Response;
+  let originalConsoleError: typeof console.error;
 
   beforeEach(() => {
+    // Store original console.error
+    originalConsoleError = console.error;
+    
+    // Mock console.error
+    console.error = mock();
+    
     mockRes = {
       json: mock(),
       status: mock(() => mockRes),
+      setHeader: mock(),
       locals: { startTime: Date.now() },
+      headersSent: false
     } as unknown as Response;
+  });
+
+  afterEach(() => {
+    // Restore original console.error
+    console.error = originalConsoleError;
   });
 
   test('should create an error response with default values', () => {
@@ -39,7 +53,7 @@ describe('ErrorResponse', () => {
 
   test('should send response with correct status and metadata', () => {
     const errorResponse = new _ERROR.NotFoundError({ message: 'Resource not found' });
-    errorResponse.send(mockRes as unknown as any);
+    errorResponse.send(mockRes);
 
     expect(mockRes.status).toHaveBeenCalledWith(HttpStatusCode.NOT_FOUND);
     expect(mockRes.json).toHaveBeenCalledWith(
@@ -56,13 +70,31 @@ describe('ErrorResponse', () => {
   });
 
   test('should log error if response sending fails', () => {
-    console.error = mock();
     const errorResponse = new _ERROR.InternalServerError({ message: 'Critical failure' });
+    const error = new Error('Response failed');
+    
     mockRes.json = mock(() => {
-      throw new Error('Response failed');
+      throw error;
     });
 
     expect(() => errorResponse.send(mockRes)).toThrow('Response failed');
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Error sending response'));
+    expect(console.error).toHaveBeenCalledWith('Error sending response:', error);
+  });
+
+  test('should handle headers correctly', () => {
+    const errorResponse = new _ERROR.BadRequestError({
+      message: 'Invalid input',
+      options: {
+        headers: {
+          'X-Custom-Header': 'test',
+          'Set-Cookie': ['cookie1=value1', 'cookie2=value2']
+        }
+      }
+    });
+
+    errorResponse.send(mockRes);
+
+    expect(mockRes.setHeader).toHaveBeenCalledWith('X-Custom-Header', 'test');
+    expect(mockRes.setHeader).toHaveBeenCalledWith('Set-Cookie', ['cookie1=value1', 'cookie2=value2']);
   });
 });
