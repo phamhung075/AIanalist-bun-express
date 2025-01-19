@@ -1,11 +1,12 @@
 import type { RequestHandler, Response } from "express";
-import _ERROR from "../helper/http-status/error/index.js";
-import _SUCCESS from "../helper/http-status/success/index.js";
-import type { CustomRequest } from "../helper/interfaces/CustomRequest.interface.js";
-import { getTokenCookies } from "../middleware/auth.middleware.js";
-import type { IAuth, IRegister } from "./auth.interface.js";
-import type AuthService from "./auth.service.js";
-import { config } from "../config/dotenv.config.js";
+import _ERROR from "../helper/http-status/error";
+import _SUCCESS from "../helper/http-status/success";
+import { CustomRequest } from "../helper/interfaces/CustomRequest.interface";
+import { getTokenCookies } from "../middleware/auth.middleware";
+import { IRegister, IAuth } from "./auth.interface";
+import AuthService from "./auth.service";
+import { config } from "../config/dotenv.config";
+
 
 class AuthController {
   constructor(private authService: AuthService) {}

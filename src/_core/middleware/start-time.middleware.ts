@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response, RequestHandler } from "express";
-import type { CustomRequest } from "../helper/interfaces/CustomRequest.interface.js";
+import type { CustomRequest } from "../helper/interfaces/CustomRequest.interface";
 
 export const startTimeAddOnRequest: RequestHandler = (
   req: Request,

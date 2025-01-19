@@ -1,8 +1,9 @@
 import { createHATEOASMiddleware, createRouter } from "express-route-tracker";
-import { config } from "../config/dotenv.config.js";
-import { asyncHandler } from "../helper/asyncHandler/index.js";
-import { firebaseAuthMiddleware } from "../middleware/auth.middleware.js";
-import { getCurrentUserHandler, loginHandler, refreshTokenHandler, registerHandler, validateLoginDTO, validateRegisterDTO } from "./auth.handler.js";
+import { config } from "../config/dotenv.config";
+import { asyncHandler } from "../helper/asyncHandler";
+import { firebaseAuthMiddleware } from "../middleware/auth.middleware";
+import { validateRegisterDTO, registerHandler, validateLoginDTO, loginHandler, getCurrentUserHandler, refreshTokenHandler } from "./auth.handler";
+
 
 // import { config } from '../config/dotenv.config';
 require("express-route-tracker")

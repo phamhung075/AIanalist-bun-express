@@ -11,9 +11,9 @@ import {
   type DecodedIdToken,
 } from "firebase-admin/auth";
 
-import { firebaseAdminAuth } from "../database/firebase-admin-sdk/index.js";
-import _ERROR from "../helper/http-status/error/index.js";
-import type { IAuth } from "./auth.interface.js";
+import { firebaseAdminAuth } from "../database/firebase-admin-sdk/index";
+import _ERROR from "../helper/http-status/error/index";
+import type { IAuth } from "./auth.interface";
 
 class AuthRepository {
   private isTestEnvironment: boolean;

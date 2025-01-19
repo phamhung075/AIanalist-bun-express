@@ -1,7 +1,7 @@
 import path from "path";
-import type { CustomRequest } from "../interfaces/CustomRequest.interface.js";
-import { getRequest } from "@/_core/middleware/displayRequest.middleware.js";
-import { config } from "@config/dotenv.config.js";
+import type { CustomRequest } from "../interfaces/CustomRequest.interface";
+import { getRequest } from "@/_core/middleware/displayRequest.middleware";
+import { config } from "@config/dotenv.config";
 import fs from "fs";
 
 // Clean up the logDir path by removing quotes and converting to absolute path

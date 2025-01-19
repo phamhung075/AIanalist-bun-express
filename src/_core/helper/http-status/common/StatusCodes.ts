@@ -1,4 +1,4 @@
-import { HttpStatusCode } from "./HttpStatusCode.js";
+import { HttpStatusCode } from "./HttpStatusCode";
 
 export const StatusCodes = {
     [HttpStatusCode.ACCEPTED]: { 

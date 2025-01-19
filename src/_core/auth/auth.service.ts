@@ -1,11 +1,13 @@
 // src/_core/auth/services/auth.service.ts
 
-import type ContactService from "@/modules/contact/contact.service.js";
-import type { DecodedIdToken, UserRecord } from "firebase-admin/auth";
-import type { UserCredential } from "firebase/auth";
-import _ERROR from "../helper/http-status/error/index.js";
-import type { AuthTokens, IRegister } from "./auth.interface.js";
-import type AuthRepository from "./auth.repository.js";
+import ContactService from "@/modules/contact/contact.service";
+import { DecodedIdToken, UserRecord } from "firebase-admin/auth";
+import { UserCredential } from "firebase/auth";
+import _ERROR from "../helper/http-status/error";
+import { IRegister } from "./auth.interface";
+import AuthRepository from "./auth.repository";
+
+
 
 
 

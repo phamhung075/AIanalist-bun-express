@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
-import { authController } from './auth.module.js';
-import { validateDTO } from '../helper/validateZodSchema/index.js';
-import { LoginSchema, RegisterSchema } from './auth.validation.js';
+import { validateDTO } from '../helper/validateZodSchema';
+import { RegisterSchema, LoginSchema } from './auth.validation';
+import { authController } from './auth.module';
+
 
 
 const validateRegisterDTO = validateDTO(RegisterSchema, 'body');

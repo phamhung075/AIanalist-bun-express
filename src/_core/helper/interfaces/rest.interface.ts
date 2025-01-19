@@ -1,6 +1,6 @@
 import type { HATEOASLinks } from "express-route-tracker";
-import type { HttpMethod } from "../http-status/common/api-config.js";
-import type { HttpStatusCode } from "../http-status/common/HttpStatusCode.js";
+import type { HttpMethod } from "../http-status/common/api-config";
+import type { HttpStatusCode } from "../http-status/common/HttpStatusCode";
 
 
 export interface PaginationParams {

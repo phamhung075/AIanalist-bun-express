@@ -1,5 +1,5 @@
-import type { FetchPageResult } from "../../interfaces/FetchPageResult.interface.js";
-import { API_CONFIG } from "./api-config.js";
+import type { FetchPageResult } from "../../interfaces/FetchPageResult.interface";
+import { API_CONFIG } from "./api-config";
 
 
 

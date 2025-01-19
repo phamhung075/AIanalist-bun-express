@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import admin from "firebase-admin";
-import _ERROR from "../helper/http-status/error/index.js";
+import _ERROR from "../helper/http-status/error/index";
 
 // Ensure Firebase is initialized
 console.log("✅ Firebase Admin is being initialized");

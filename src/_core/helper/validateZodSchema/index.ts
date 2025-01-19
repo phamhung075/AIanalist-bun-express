@@ -1,6 +1,6 @@
 import { ZodSchema, ZodError } from "zod";
-import { HttpStatusCode } from "../http-status/common/HttpStatusCode.js";
-import _ERROR, { ErrorResponse } from "../http-status/error/index.js";
+import { HttpStatusCode } from "../http-status/common/HttpStatusCode";
+import _ERROR, { ErrorResponse } from "../http-status/error/index";
 import type { NextFunction, Request, Response } from "express";
 
 

@@ -1,5 +1,5 @@
-import { firebaseConfig } from "@/_core/config/dotenv.config.js";
-import { firebaseAdminAccount } from "@/_core/config/firebase-admin.account.js";
+import { firebaseConfig } from "@/_core/config/dotenv.config";
+import { firebaseAdminAccount } from "@/_core/config/firebase-admin.account";
 import { red, yellow } from "colorette";
 import {
     App,
