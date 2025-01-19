@@ -1,124 +1,159 @@
-// import { describe, expect, it, beforeEach, mock } from "bun:test";
-// import type { Request, Response, NextFunction } from "express";
+import { describe, test, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
+import { Request, Response } from 'express';
+import { firebaseAuthMiddleware, getTokenCookies } from '../auth.middleware';
 
-// type MockedNextFunction = ReturnType<typeof mock> & NextFunction;
-// type MockFunction = ReturnType<typeof mock>;
+describe('Auth Middleware', () => {
+  beforeAll(() => {
+    // Mock the entire firebase-admin module
+    mock.module('firebase-admin', () => {
+      return {
+        default: {
+          apps: [],
+          initializeApp: () => {},
+          auth: () => ({
+            verifyIdToken: async (token: string) => {
+              if (token === 'valid-token') {
+                return {
+                  uid: 'test-uid',
+                  email: 'test@example.com'
+                };
+              }
+              throw new Error('Invalid token');
+            }
+          })
+        }
+      };
+    });
+  });
 
-// interface MockedResponse extends Omit<Response, 'status' | 'json'> {
-//   status: MockFunction & ((code: number) => MockedResponse);
-//   json: MockFunction & ((body: any) => MockedResponse);
-// }
+  // Test getTokenCookies function
+  describe('getTokenCookies', () => {
+    test('should extract tokens from cookies', () => {
+      const mockReq = {
+        headers: {
+          cookie: 'idToken=test-id-token; refreshToken=test-refresh-token; otherCookie=value'
+        }
+      } as Request;
 
-// // Mock firebase-admin before importing the middleware
-// const mockVerifyIdToken = mock(async (token: string) => {
-//   if (token === "valid_token") {
-//     return { uid: "user123" };
-//   }
-//   throw new Error("Invalid token");
-// });
+      const tokens = getTokenCookies(mockReq);
+      
+      expect(tokens.idToken).toBe('test-id-token');
+      expect(tokens.refreshToken).toBe('test-refresh-token');
+    });
 
-// // Mock modules before importing the middleware
-// mock.module("firebase-admin", () => ({
-//   __esModule: true,
-//   default: {
-//     apps: [],
-//     initializeApp: () => {},
-//     auth: () => ({
-//       verifyIdToken: mockVerifyIdToken
-//     })
-//   }
-// }));
+    test('should handle missing cookies', () => {
+      const mockReq = {
+        headers: {}
+      } as Request;
 
-// mock.module("@helper/http-status/common/HttpStatusCode", () => ({
-//   UNAUTHORIZED: 401
-// }));
+      const tokens = getTokenCookies(mockReq);
+      
+      expect(tokens.idToken).toBe('');
+      expect(tokens.refreshToken).toBe('');
+    });
 
-// mock.module("@helper/http-status/common/RestHandler", () => ({
-//   error: (req: Request, res: Response, error: { code: number; message: string }) => {
-//     return res.status(error.code).json({
-//       success: false,
-//       code: error.code,
-//       message: error.message,
-//       errors: undefined,
-//       metadata: {
-//         statusCode: "UNAUTHORIZED",
-//         description: "The client must authenticate itself to get the requested response.",
-//         documentation: "https://tools.ietf.org/html/rfc7235#section-3.1",
-//         timestamp: new Date().toISOString()
-//       }
-//     });
-//   }
-// }));
+    test('should handle cookies without tokens', () => {
+      const mockReq = {
+        headers: {
+          cookie: 'otherCookie=value'
+        }
+      } as Request;
 
-// // Import the middleware after all mocks are set up
-// import { firebaseAuthMiddleware } from "../auth.middleware";
+      const tokens = getTokenCookies(mockReq);
+      
+      expect(tokens.idToken).toBe('');
+      expect(tokens.refreshToken).toBe('');
+    });
+  });
 
-// describe("firebaseAuthMiddleware", () => {
-//   let req: Partial<Request>;
-//   let res: MockedResponse;
-//   let next: MockedNextFunction;
+  // Test firebaseAuthMiddleware
+  describe('firebaseAuthMiddleware', () => {
+    test('should pass with valid token in cookie', async () => {
+      const mockReq = {
+        headers: {
+          cookie: 'idToken=valid-token'
+        }
+      } as Request;
 
-//   beforeEach(() => {
-//     // Reset mocks
-//     mockVerifyIdToken.mockReset();
+      const mockRes = {} as Response;
+      let nextCalled = false;
+      const mockNext = () => { nextCalled = true; };
 
-//     // Setup request
-//     req = {
-//       headers: {}
-//     };
+      await firebaseAuthMiddleware(mockReq, mockRes, mockNext);
+      
+      expect((mockReq as any).user).toBeDefined();
+      expect((mockReq as any).user.uid).toBe('test-uid');
+      expect(nextCalled).toBe(true);
+    });
 
-//     // Setup mocked response with chainable methods
-//     const mockStatus = mock(() => mockRes);
-//     const mockJson = mock(() => mockRes);
-//     const mockRes: MockedResponse = {
-//       status: mockStatus as any,
-//       json: mockJson as any
-//     } as unknown as MockedResponse;
-//     res = mockRes;
+    test('should pass with valid token in authorization header', async () => {
+      const mockReq = {
+        headers: {
+          authorization: 'Bearer valid-token'
+        }
+      } as Request;
 
-//     // Setup next
-//     next = mock(() => {}) as MockedNextFunction;
-//   });
+      const mockRes = {} as Response;
+      let nextCalled = false;
+      const mockNext = () => { nextCalled = true; };
 
-//   it("should return 401 if no token is provided", async () => {
-//     await firebaseAuthMiddleware(req as Request, res as unknown as Response, next);
-    
-//     expect(res.status.mock.calls).toHaveLength(1);
-//     expect(res.status.mock.calls[0][0]).toBe(401);
-//     expect(res.json.mock.calls).toHaveLength(1);
-//     expect(res.json.mock.calls[0][0]).toMatchObject({
-//       success: false,
-//       code: 401,
-//       message: "Unauthorized: No token provided"
-//     });
-//   });
+      await firebaseAuthMiddleware(mockReq, mockRes, mockNext);
+      
+      expect((mockReq as any).user).toBeDefined();
+      expect((mockReq as any).user.uid).toBe('test-uid');
+      expect(nextCalled).toBe(true);
+    });
 
-//   it("should return 401 if token is invalid", async () => {
-//     req.headers = { authorization: "Bearer invalid_token" };
-    
-//     await firebaseAuthMiddleware(req as Request, res as unknown as Response, next);
-    
-//     expect(res.status.mock.calls).toHaveLength(1);
-//     expect(res.status.mock.calls[0][0]).toBe(401);
-//     expect(res.json.mock.calls).toHaveLength(1);
-//     expect(res.json.mock.calls[0][0]).toMatchObject({
-//       success: false,
-//       code: 401,
-//       message: "Unauthorized: Invalid or expired token"
-//     });
-//     expect(next.mock.calls).toHaveLength(0);
-//   });
+    test('should fail when no token is provided', async () => {
+      const mockReq = {
+        headers: {}
+      } as Request;
 
-//   it("devrait appeler next() si le token est valide", async () => {
-//     req.headers = { authorization: "Bearer valid_token" };
-    
-//     await firebaseAuthMiddleware(req as Request, res as unknown as Response, next);
-    
-//     expect(mockVerifyIdToken.mock.calls).toHaveLength(1);
-//     expect(mockVerifyIdToken.mock.calls[0][0]).toBe("valid_token");
-//     expect((req as any).user).toEqual({ uid: "user123" });
-//     expect(next.mock.calls).toHaveLength(1);
-//     expect(res.status.mock.calls).toHaveLength(0);
-//     expect(res.json.mock.calls).toHaveLength(0);
-//   });
-// });
+      const mockRes = {
+        status: function(code: number) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function(data: any) {
+          this.body = data;
+          return this;
+        }
+      } as any;
+
+      let nextCalled = false;
+      const mockNext = () => { nextCalled = true; };
+
+      await firebaseAuthMiddleware(mockReq, mockRes, mockNext);
+      
+      expect(mockRes.statusCode).toBe(401);
+      expect(mockRes.body.message).toBe('Unauthorized: No token provided');
+    });
+
+    test('should fail with invalid token', async () => {
+      const mockReq = {
+        headers: {
+          authorization: 'Bearer invalid-token'
+        }
+      } as Request;
+
+      const mockRes = {
+        status: function(code: number) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function(data: any) {
+          this.body = data;
+          return this;
+        }
+      } as any;
+
+      let nextCalled = false;
+      const mockNext = () => { nextCalled = true; };
+
+      await firebaseAuthMiddleware(mockReq, mockRes, mockNext);
+      
+      expect(mockRes.statusCode).toBe(401);
+      expect(mockRes.body.message).toBe('Unauthorized: Invalid token');
+    });
+  });
+});
