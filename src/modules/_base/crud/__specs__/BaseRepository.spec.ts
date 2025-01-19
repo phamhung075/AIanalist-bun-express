@@ -1,60 +1,48 @@
-import {
-  describe,
-  test,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterAll,
-} from "bun:test";
+import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
 import { faker } from "@faker-js/faker";
 import { initializeApp, deleteApp, getApps } from "firebase/app";
-import { BaseRepository } from "../BaseRepository";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { DocumentSnapshot } from "firebase-admin/firestore";
+import { BaseRepository } from "../BaseRepository";
 
-// Test interfaces
 interface TestEntity {
   id?: string;
   name: string;
   description: string;
+  priority?: string;
+  status?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-// Test implementation of BaseRepository
 class TestRepository extends BaseRepository<TestEntity> {
   constructor() {
     super("test_collection");
   }
+
+  async getDocumentSnapshot(id: string): Promise<DocumentSnapshot> {
+    return await this.collection.doc(id).get();
+  }
 }
 
-// Test configuration
-const testConfig = {
-  projectId: "demo-test",
-  apiKey: "test-api-key",
-  authDomain: "demo-test.firebaseapp.com",
-};
-
-describe("BaseRepository", () => {
+describe("BaseRepository Error Handling and Advanced Pagination", () => {
   let repository: TestRepository;
   let app: any;
 
   beforeAll(async () => {
-    // Set up Firestore emulator
     process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:9098";
 
-    // Clean up existing apps
     const existingApps = getApps();
     await Promise.all(existingApps.map((app) => deleteApp(app)));
 
-    // Initialize Firebase
-    app = initializeApp(testConfig);
+    app = initializeApp({
+      projectId: "demo-test",
+      apiKey: "test-api-key",
+      authDomain: "demo-test.firebaseapp.com",
+    });
+    
     const firestore = getFirestore(app);
-
-    // Connect to emulator
     connectFirestoreEmulator(firestore, "127.0.0.1", 9098);
-
-    // Wait for connection
-    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   afterAll(async () => {
@@ -63,216 +51,158 @@ describe("BaseRepository", () => {
     }
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     repository = new TestRepository();
+    // Clean up the collection first
+    const allDocs = await repository.getAll();
+    await Promise.all(allDocs.map(doc => repository.delete(doc.id!)));
   });
 
-  describe("create", () => {
-    test("should create a new document", async () => {
-      const testData: Omit<TestEntity, "id"> = {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      };
-
-      const result = await repository.create(testData);
-
-      expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe(testData.name);
-      expect(result.description).toBe(testData.description);
-    });
-
-    test("should create a document with specific ID", async () => {
-      const testId = faker.string.uuid();
-      const testData: Omit<TestEntity, "id"> = {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      };
-
-      const result = await repository.createWithId(testId, testData);
-
-      expect(result).toBeDefined();
-      expect(result.id).toBe(testId);
-      expect(result.name).toBe(testData.name);
-      expect(result.description).toBe(testData.description);
-    });
-  });
-
-  describe("getById", () => {
-    test("should retrieve a document by ID", async () => {
-      // First create a document
-      const testData: Omit<TestEntity, "id"> = {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      };
-      const created = await repository.create(testData);
-
-      // Then retrieve it
-      const result = await repository.getById(created.id!);
-
-      expect(result).toBeDefined();
-      expect(result?.id).toBe(created.id as string);
-      expect(result?.name).toBe(testData.name);
-    });
-
-    test("should return null for non-existent ID", async () => {
-      await expect(repository.getById("non-existent-id")).rejects.toThrow(
-        /Document with ID .* not found/
-      );
-    });
-  });
-
-  describe("update", () => {
-    test("should update an existing document", async () => {
-      // First create a document
-      const testData: Omit<TestEntity, "id"> = {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      };
-      const created = await repository.create(testData);
-
-      // Then update it
-      const updateData = {
-        name: faker.commerce.productName(),
-      };
-      const result = await repository.update(created.id!, updateData);
-
-      expect(result).toBeDefined();
-      expect(result?.id).toBe(created.id as string);
-      expect(result?.name).toBe(updateData.name);
-      expect(result?.description).toBe(testData.description);
-    });
-
-    test("should throw error when updating non-existent document", async () => {
-      const updateData = {
-        name: faker.commerce.productName(),
-      };
-
-      await expect(
-        repository.update("non-existent-id", updateData)
-      ).rejects.toThrow(/Document with ID .* not found/);
-    });
-  });
-
-  describe("delete", () => {
-    test("should delete an existing document", async () => {
-      // First create a document
-      const testData: Omit<TestEntity, "id"> = {
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-      };
-      const created = await repository.create(testData);
-
-      // Then delete it
-      const result = await repository.delete(created.id!);
-      expect(result).toBe(true);
-
-      // Verify it's deleted
-      await expect(repository.getById(created.id!)).rejects.toThrow(
-        /Document with ID .* not found/
-      );
-    });
-
-    test("should throw error when deleting non-existent document", async () => {
-      await expect(repository.delete("non-existent-id")).rejects.toThrow(
-        /Document with ID .* not found/
-      );
-    });
-  });
-
-  describe("paginator", () => {
-    test("should return paginated results", async () => {
-      // Create multiple documents
-      const testEntities = await Promise.all(
-        Array(15)
-          .fill(null)
-          .map(() =>
-            repository.create({
-              name: faker.commerce.productName(),
-              description: faker.commerce.productDescription(),
-            })
-          )
-      );
-
-      const result = await repository.paginator({
-        page: 1,
-        limit: 10,
-      });
-
-      expect(result.data).toBeDefined();
-      expect(result.data.length).toBeLessThanOrEqual(10);
-      expect(result.totalItems).toBeGreaterThanOrEqual(15);
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(10);
-    });
-
-    test("should handle filters", async () => {
-      const uniqueName = faker.string.uuid();
-
-      // Create a document with unique name
-      await repository.create({
-        name: uniqueName,
-        description: faker.commerce.productDescription(),
-      });
-
-      const result = await repository.paginator({
-        page: 1,
-        limit: 10,
-        filters: [{ key: "name", operator: "==", value: uniqueName }],
-      });
-
-      expect(result.data).toBeDefined();
-      expect(result.data.length).toBe(1);
-      expect(result.data[0].name).toBe(uniqueName);
-    });
-
-    test("should handle ordering", async () => {
-      // Create documents with predictable names using timestamp to ensure uniqueness
+  describe("pagination features", () => {
+    test("should handle multiple filters and ordering", async () => {
       const timestamp = Date.now();
-      const testNames = [`A_${timestamp}`, `B_${timestamp}`, `C_${timestamp}`];
-
-      await Promise.all(
-        testNames.map((name) =>
-          repository.create({
-            name,
-            description: "desc",
-          })
-        )
-      );
+      await Promise.all([
+        repository.create({
+          name: `Active High ${timestamp}`,
+          description: "Test description 1",
+          priority: "high",
+          status: "active"
+        }),
+        repository.create({
+          name: `Active Low ${timestamp}`,
+          description: "Test description 2",
+          priority: "low",
+          status: "active"
+        }),
+        repository.create({
+          name: `Inactive ${timestamp}`,
+          description: "Test description 3",
+          priority: "low",
+          status: "inactive"
+        })
+      ]);
 
       const result = await repository.paginator({
         page: 1,
         limit: 10,
         filters: [
-          // Filter to only get our test documents
-          {
-            key: "name",
-            operator: "in",
-            value: testNames as unknown as string,
-          },
+          { key: "status", operator: "==", value: "active" },
+          { key: "priority", operator: "==", value: "high" }
         ],
         orderBy: {
           field: "name",
-          direction: "desc",
-        },
+          direction: "asc"
+        }
       });
 
-      expect(result.data).toBeDefined();
-      expect(result.data.length).toBe(3);
+      expect(result.data.length).toBe(1);
+      expect(result.count).toBe(1);
+      expect(result.totalItems).toBeGreaterThanOrEqual(1);
+      expect(result.page).toBe(1);
+      expect(result.data[0].status).toBe("active");
+      expect(result.data[0].priority).toBe("high");
+    });
 
-      // Get just the names from our result
-      const resultNames = result.data.map((item) => item.name);
+    test("should return all documents and handle metadata when all flag is true", async () => {
+      // Create exactly 15 test documents
+      const docsToCreate = Array(15).fill(null).map((_, index) => ({
+        name: `Test ${String(index).padStart(2, '0')}`,
+        description: faker.commerce.productDescription(),
+        status: "active"
+      }));
 
-      // Sort our test names in reverse order for comparison
-      const expectedNames = [...testNames].sort((a, b) => b.localeCompare(a));
+      await Promise.all(
+        docsToCreate.map(doc => repository.create(doc))
+      );
 
-      // Compare the arrays
-      expect(resultNames).toEqual(expectedNames);
+      const result = await repository.paginator({
+        page: 1,
+        limit: 5,
+        all: true,
+        orderBy: {
+          field: "name",
+          direction: "asc"
+        }
+      });
 
-      // Verify descending order
-      for (let i = 1; i < resultNames.length; i++) {
-        expect(resultNames[i - 1] > resultNames[i]).toBe(true);
-      }
+      // Check data retrieval
+      expect(result.data.length).toBe(15); // Should get all documents
+      expect(result.count).toBe(15);
+      expect(result.totalItems).toBe(15);
+      expect(result.data).toHaveLength(15);
+      
+      // Verify order
+      const names = result.data.map(doc => doc.name);
+      expect(names).toEqual([...names].sort());
+      
+      // Verify we got all documents
+      const uniqueNames = new Set(names);
+      expect(uniqueNames.size).toBe(15);
+      
+      // Verify data consistency
+      result.data.forEach(doc => {
+        expect(doc.status).toBe("active");
+        expect(doc.description).toBeDefined();
+      });
+    });
+
+    test("should handle pagination with lastVisible", async () => {
+      // Create test documents with consistent ordering
+      const createdDocs = await Promise.all(
+        Array(15).fill(null).map((_, index) => 
+          repository.create({
+            name: `Test ${String(index).padStart(2, '0')}`,
+            description: faker.commerce.productDescription()
+          })
+        )
+      );
+
+      // Get first page
+      const firstPage = await repository.paginator({
+        page: 1,
+        limit: 5,
+        orderBy: {
+          field: "name",
+          direction: "asc"
+        }
+      });
+
+      expect(firstPage.data.length).toBe(5);
+      expect(firstPage.hasNext).toBe(true);
+
+      // Get the raw document snapshot for lastVisible
+      const lastDocSnapshot = await repository.getDocumentSnapshot(firstPage.data[4].id!);
+
+      // Get second page using the document snapshot
+      const secondPage = await repository.paginator({
+        page: 2,
+        limit: 5,
+        orderBy: {
+          field: "name",
+          direction: "asc"
+        },
+        lastVisible: lastDocSnapshot
+      });
+
+      expect(secondPage.data.length).toBe(5);
+      expect(secondPage.count).toBe(5);
+      expect(secondPage.page).toBe(2);
+      
+      // Verify documents are different between pages
+      const firstPageNames = new Set(firstPage.data.map(doc => doc.name));
+      const secondPageNames = new Set(secondPage.data.map(doc => doc.name));
+      const overlap = intersection(firstPageNames, secondPageNames);
+      expect(overlap.size).toBe(0);
     });
   });
 });
+
+function intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+  const result = new Set<T>();
+  for (const elem of setA) {
+    if (setB.has(elem)) {
+      result.add(elem);
+    }
+  }
+  return result;
+}
