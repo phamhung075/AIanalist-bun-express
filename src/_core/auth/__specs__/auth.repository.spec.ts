@@ -158,4 +158,95 @@ describe('AuthRepository Integration Tests', () => {
         .rejects.toThrow(/User not found/i);
     });
   });
+
+  describe('refreshToken', () => {
+  test('should refresh token successfully', async () => {
+    // First create and login user to get initial tokens
+    await authRepository.createUser({
+      email: testEmail,
+      password: testPassword,
+    });
+    const { refreshToken } = await authRepository.loginUser(testEmail, testPassword);
+
+    // Mock fetch for test environment
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = () => 
+      Promise.resolve(new Response(
+        JSON.stringify({
+          id_token: 'new-test-id-token',
+          refresh_token: 'new-test-refresh-token',
+        }), 
+        { status: 200 }
+      ));
+
+    try {
+      const result = await authRepository.refreshToken(refreshToken);
+
+      expect(result).toHaveProperty('idToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(result.idToken).toBe('new-test-id-token');
+      expect(result.refreshToken).toBe('new-test-refresh-token');
+    } finally {
+      // Restore original fetch
+      globalThis.fetch = originalFetch;
+    }
+  }, 15000);
+
+  test('should fail with invalid refresh token', async () => {
+    await expect(authRepository.refreshToken('invalid-refresh-token'))
+      .rejects.toThrow(/Failed to refresh token/i);
+  });
+
+  test('should handle network errors during token refresh', async () => {
+    // Temporarily disable network to simulate failure
+    process.env.FIREBASE_API_KEY = 'invalid-key';
+    
+    await expect(authRepository.refreshToken('some-token'))
+      .rejects.toThrow(/Failed to refresh token/i);
+      
+    // Restore API key
+    process.env.FIREBASE_API_KEY = testConfig.apiKey;
+  });
+});
+  
+  describe('error handling', () => {
+    describe('createUser', () => {
+      test('should handle invalid email format', async () => {
+        await expect(authRepository.createUser({
+          email: 'invalid-email',
+          password: testPassword,
+        })).rejects.toThrow(/Invalid email format/i);
+      });
+  
+      test('should handle weak password', async () => {
+        await expect(authRepository.createUser({
+          email: testEmail,
+          password: '123', // Too weak
+        })).rejects.toThrow(/Password is too weak/i);
+      });
+    });
+  
+    describe('verifyIdToken', () => {
+      test('should handle malformed tokens', async () => {
+        await expect(authRepository.verifyIdToken('malformed.token.here'))
+          .rejects.toThrow(/Invalid or expired token/i);
+      });
+    });
+  
+    describe('getUserById', () => {
+      test('should handle internal server errors', async () => {
+        // Mock the getUser method to throw an error
+        const originalGetUser = authRepository['adminAuth'].getUser;
+        authRepository['adminAuth'].getUser = async () => {
+          throw new Error('Internal server error');
+        };
+  
+        await expect(authRepository.getUserById('some-uid'))
+          .rejects.toThrow(/Failed to get user information/i);
+  
+        // Restore original method
+        authRepository['adminAuth'].getUser = originalGetUser;
+      });
+    });
+  });
 });
