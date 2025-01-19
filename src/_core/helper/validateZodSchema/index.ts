@@ -23,13 +23,13 @@ export function validateDTO(schema: ZodSchema, type: 'body' | 'params' | 'query'
             next(); // Proceed to the next middleware/controller if valid
         } catch (err) {
             if (err instanceof ZodError) {
-                return new _ERROR.ValidationError({
+                throw new _ERROR.ValidationError({
                         message: 'Validation Error',
                         errors: err.issues.map((issue) => ({
                             field: issue.path.join('.'),
                             message: issue.message,
                         })),
-                    }).send(res, next);
+                    });
             }
             next(err); // Pass unexpected errors to the error handler
         }

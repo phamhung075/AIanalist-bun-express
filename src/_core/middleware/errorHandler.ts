@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { HttpStatusCode } from '../helper/http-status/common/HttpStatusCode.js';
 import _ERROR from '../helper/http-status/error/index.js';
+import { logResponse } from '../helper/http-status/response-log.js';
 
 // Not Found Handler Middleware
 export const notFoundMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -12,6 +13,8 @@ export const notFoundMiddleware = (req: Request, res: Response, next: NextFuncti
 
 // Error Handler Middleware
 export const errorHandlerMiddleware = (error: any, req: Request, res: Response, next: NextFunction) => {
+  logResponse(req, JSON.stringify(error, null, 2));
+
   // Already sent response
   if (res.headersSent) {
     return next(error);

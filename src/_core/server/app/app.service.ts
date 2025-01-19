@@ -89,9 +89,9 @@ export class AppService {
     const routeDisplay = new RouteDisplay(app);
     routeDisplay.displayRoutes();
 
-    /**
-     * Handles requests to undefined routes.
-     */
+    // /**
+    //  * Handles requests to undefined routes.
+    //  */
     app.use(errorMiddleware.notFound);
     app.use(errorMiddleware.errorHandler);
 

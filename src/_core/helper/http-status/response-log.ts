@@ -12,9 +12,9 @@ export function createLogger(logDir: string) {
         logError: (message: string) => {
             fs.appendFileSync(path.join(logDir, 'error-log.txt'), message + '\n', 'utf8');
         },
-        logResponse: (message: string) => {
-            fs.appendFileSync(path.join(logDir, 'response-log.txt'), message + '\n', 'utf8');
-        }
+        // logResponse: (message: string) => {
+        //     fs.appendFileSync(path.join(logDir, 'response-log.txt'), message + '\n', 'utf8');
+        // }
     };
 }
 
@@ -34,6 +34,7 @@ __________________________________________
 }
 
 export function createLogDir(): string {
+
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const hour = now.getUTCHours().toString().padStart(2, '0');
@@ -47,13 +48,15 @@ export function createLogDir(): string {
     if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
     }
+
+    console.log('createLogDir ---------->', logDir);
     
     return logDir;
 }
 
-export function logResponse(req: CustomRequest<any>, response: string): void {
+export function logResponse(req: CustomRequest<any>, response: string) {
     const logDir = createLogDir();
-    const logFilePath = path.join(logDir, 'response.log');
-    
-    fs.appendFileSync(logFilePath, `${new Date().toISOString()} - ${response}\n`);
+    const logger = createLogger(logDir);
+    console.log("response saved on:", logDir);
+    logger.logError(createErrorLog(req, response, req.startTime || 0));
 }
