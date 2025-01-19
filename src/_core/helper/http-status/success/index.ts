@@ -1,8 +1,9 @@
 import type { NextFunction, Response } from "express";
-import type { PaginationResult } from "../../interfaces/rest.interface.js";
-import { HttpStatusCode } from "../common/HttpStatusCode.js";
-import { StatusCodes } from "../common/StatusCodes.js";
-import { getStatusText } from "../common/api-config.js";
+import { PaginationResult } from "../../interfaces/rest.interface";
+import { getStatusText } from "../common/api-config";
+import { HttpStatusCode } from "../common/HttpStatusCode";
+import { StatusCodes } from "../common/StatusCodes";
+
 
 
 
