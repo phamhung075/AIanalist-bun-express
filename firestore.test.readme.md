@@ -1,64 +1,109 @@
-PS D:\DaiHung\__labo\AIanalist-bun-express> bun install -g firebase-tools
-bun add v1.1.42 (50eec002)
-[9.33ms] migrated lockfile from package-lock.json
+# Firebase Emulator Setup Guide
 
-installed firebase-tools@13.29.1 with binaries:
- - firebase
+## Prerequisites
+- Bun
+- Java JDK 11+
+- Firebase project
 
-561 packages installed [8.71s]
+## Quick Start
 
-Blocked 1 postinstall. Run `bun pm -g untrusted` for details.
-PS D:\DaiHung\__labo\AIanalist-bun-express> firebase login
->>
->>
-i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+Install Firebase Tools:
+```bash
+bun install -g firebase-tools
+```
 
-? Allow Firebase to collect CLI and Emulator Suite usage and error reporting information? Yes
-i  To change your data collection preference at any time, run `firebase logout` and log in again.
+Login to Firebase:
+```bash
+firebase login
+```
 
-Visit this URL on this device to log in:
-https://accounts.google.com/o/oauth2/auth?client_id=...
+Initialize Emulators:
+```bash
+firebase init emulators
+```
 
-Waiting for authentication...
+## Java Setup
 
-+  Success! Logged in as daihung.pham@gmail.com
-PS D:\DaiHung\__labo\AIanalist-bun-express> firebase init emulators
->>
+**Install JDK:**
+- Download from Oracle's website
+- Install JDK 11 or higher
 
-     ######## #### ########  ######## ########     ###     ######  ########
-     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
-     ######    ##  ########  ######   ########  #########  ######  ######
-     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
-     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+**Set JAVA_HOME:**
 
-You're about to initialize a Firebase project in this directory:
+Windows:
+```bash
+setx JAVA_HOME "C:\Program Files\Java\jdk-[version]"
+```
 
-  D:\DaiHung\__labo\AIanalist-bun-express
+macOS/Linux:
+```bash
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk-[version].jdk/Contents/Home"
+```
 
-? Are you ready to proceed? Yes
+Verify:
+```bash
+java -version
+```
 
-=== Project Setup
+## Emulator Configuration
 
-First, let's associate this project directory with a Firebase project.
-You can create multiple project aliases by running firebase use --add,
-but for now we'll just set up a default project.
+**Selected Emulators:**
+- Authentication (Port: 9099)
+- Firestore (Port: 8080)
+- UI (Port: 4000)
 
-? Please select an option: Use an existing project
-? Select a default Firebase project for this directory: ai-analyst-14876 (AI-analyst)
-i  Using project ai-analyst-14876 (AI-analyst)
+**firebase.json:**
+```json
+{
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}
+```
 
-=== Emulators Setup
-? Which Firebase emulators do you want to set up? Press Space to select emulators, then Enter to confirm your choices. Authentication Emulator, Firestore Emulator
-? Which port do you want to use for the auth emulator? 9099
-? Which port do you want to use for the firestore emulator? 8080
-? Would you like to enable the Emulator UI? Yes
-? Which port do you want to use for the Emulator UI (leave empty to use any available port)? 4000
-? Would you like to download the emulators now? Yes
-i  firestore: downloading cloud-firestore-emulator-v1.19.8.jar...
-Progress: ========================================================================================================================================================================================================================================> (100% of 64MB) 
-i  ui: downloading ui-v1.14.0.zip...
+## Usage
 
-i  Writing configuration info to firebase.json...
-i  Writing project information to .firebaserc...
+Start all:
+```bash
+firebase emulators:start
+```
 
-+  Firebase initialization complete!
+Start specific:
+```bash
+firebase emulators:start --only auth,firestore
+```
+
+## Endpoints
+- UI: `http://localhost:4000`
+- Auth: `http://localhost:9099`
+- Firestore: `http://localhost:8080`
+
+## Troubleshooting
+
+**Check Java:**
+```bash
+java -version
+echo %JAVA_HOME%  # Windows
+echo $JAVA_HOME   # Unix
+```
+
+**Check Ports:**
+```bash
+netstat -ano | findstr "PORT"  # Windows
+lsof -i :PORT                  # Unix
+```
+
+## Tips
+- Use consistent ports across team
+- Configure for development only
+- Check Java requirements
+- Monitor emulator UI for debugging
