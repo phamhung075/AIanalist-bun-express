@@ -100,7 +100,7 @@ export class ErrorResponse  {
 
             if (!res.headersSent) {
                 const response = this.formatResponse();
-                console.log('Sending ErrorResponse:', response);
+                // console.log('Sending ErrorResponse:', response);
                 res.status(this.status).json(response);
             } else {
                 console.warn('Attempted to send response after headers were already sent.');

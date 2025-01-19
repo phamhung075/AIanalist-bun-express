@@ -19,7 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-rate-limit": "^7.5.0",
-    "express-route-tracker": "^2.0.72",
+    "express-route-tracker": "^2.0.73",
     "firebase": "^11.2.0",
     "firebase-admin": "^13.0.2",
     "helmet": "^8.0.0",

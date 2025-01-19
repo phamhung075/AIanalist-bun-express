@@ -85,7 +85,7 @@ export abstract class BaseRepository<T extends { id?: string }> {
                 throw new _ERROR.NotFoundError({ message: `Document with ID ${id} not found` });
             }
 
-            console.log(`✅ Document found:`, doc.data());
+            // console.log(`✅ Document found:`, doc.data());
             return { id: doc.id, ...doc.data() } as T;
         } catch (error: any) {
             if (error instanceof _ERROR.NotFoundError) {

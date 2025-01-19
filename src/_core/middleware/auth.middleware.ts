@@ -33,7 +33,7 @@ export async function firebaseAuthMiddleware(
   // console.log("req get", req);
 
   const token = idToken || req.headers.authorization?.split(" ")[1];
-  console.log("token get", token);
+  // console.log("token get", token);
   if (!token) {
     return new _ERROR.UnauthorizedError({
       message: "Unauthorized: No token provided",
