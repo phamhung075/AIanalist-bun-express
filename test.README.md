@@ -47,6 +47,10 @@ java -version
 
 ## Emulator Configuration
 
+**Which Firebase emulators do you want to set up? **
+- Authentication Emulator
+- Firestore Emulator
+
 **Selected Emulators:**
 - Authentication (Port: 9099)
 - Firestore (Port: 8080)
