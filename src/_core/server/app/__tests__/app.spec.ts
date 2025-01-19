@@ -40,12 +40,14 @@ describe('AppService API Tests', () => {
     
     expect(body).toMatchObject({
       success: false,
-      code: HttpStatusCode.NOT_FOUND,
+      error: true,
       message: 'The requested resource was not found.',
-      metadata: expect.objectContaining({
-        statusCode: 'NOT_FOUND',
-        description: 'The server cannot find the requested resource.'
-      })
+      metadata: {
+        description: 'The server cannot find the requested resource.',
+        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.4',
+        code: HttpStatusCode.NOT_FOUND,
+        status: 'NOT_FOUND'
+      }
     });
   });
 
@@ -96,7 +98,7 @@ describe('AppService API Tests', () => {
     const body = await response.json();
     
     expect(body).toMatchObject({
-      message: expect.any(String)
+      message: 'Welcome to AIAnalyst!'
     });
   });
 
