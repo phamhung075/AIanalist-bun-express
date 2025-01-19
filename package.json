@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
-    "build": "tsc && bun build:post",
-    "build:post": "cp -r ./_core ./dist/_core && cp -r ./environment ./dist/environment",
-    "start": "NODE_ENV=production bun ./dist/index.js",
-    "clean": "rm -rf dist",
+    "build": "tsc && bun run build:post",
+    "build:post": "node copy-dirs.js",
+    "start": "NODE_ENV=production bun ./dist/src/index.js",
+    "clean": "if exist dist rmdir /s /q dist",
     "build:clean": "bun run clean && bun run build"
   },
   "dependencies": {

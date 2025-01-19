@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "types": ["bun-types"],
     "allowJs": true,
     "strict": true,
+    "noImplicitAny": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    // "noEmit": true, // Added this line to fix the error
-    // "allowImportingTsExtensions": true, // Cette option nécessite que 'noEmit' ou 'emitDeclarationOnly' soit défini.
     "outDir": "dist",
     "rootDir": ".",
     "baseUrl": ".",
@@ -32,7 +31,7 @@
     "src/**/*",
     "environment/**/*",
     "environment/**/*.json"
-  ],
+, "check-dirs.js"  ],
   "exclude": [
     "node_modules"
   ]
