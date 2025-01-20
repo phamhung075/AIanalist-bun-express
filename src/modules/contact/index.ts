@@ -5,7 +5,7 @@ import { asyncHandler } from '@/_core/helper/asyncHandler/index';
 import { config } from '@/_core/config/dotenv.config';
 import { firebaseAuthMiddleware } from '@/_core/middleware/auth.middleware';
 import { contactController } from './contact.module';
-import { validateCreateDTO, validateIdDTO, validateUpdateDTO } from './contact.dto';
+import { validateCreateDTO, validateIdDTO, validatePaginationDTO, validateUpdateDTO } from './contact.dto';
 
 // Create router with source tracking
 const router = createRouter(__filename);
@@ -26,7 +26,7 @@ router.use(createHATEOASMiddleware(router, {
 
 // Define routes without baseApi prefix
 router.post('/', validateCreateDTO, asyncHandler(contactController.create));
-router.get('/', asyncHandler(contactController.getAll));
+router.get('/', validatePaginationDTO, asyncHandler(contactController.getAll));
 router.get('/:id', firebaseAuthMiddleware, validateIdDTO, asyncHandler(contactController.getById));
 // router.put('/:id', firebaseAuthMiddleware,validateIdDTO, validateCreateDTO, asyncHandler(contactController.replace)); //todo
 router.patch('/:id', firebaseAuthMiddleware, validateIdDTO, validateUpdateDTO, asyncHandler(contactController.update));

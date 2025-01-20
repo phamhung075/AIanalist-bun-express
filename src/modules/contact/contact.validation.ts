@@ -25,6 +25,16 @@ export const UpdateSchema = z.object({
   message: z.string().optional(),
 });
 
+
+export const PaginationSchema = z.object({
+  page: z.number().int().positive().optional().default(1),
+  limit: z.number().int().positive().optional().default(10),
+  sort: z.string().optional(),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+export type PaginationInput = z.infer<typeof PaginationSchema>;
+
 export const IdSchema = z.object({
   id: z.string().min(1, 'ID is required'),
 });
