@@ -2,6 +2,8 @@ import { expect, describe, test, beforeEach, mock } from "bun:test";
 import { z } from 'zod';
 import { validateDTO } from "..";
 import { HttpStatusCode } from "../../http-status/common/HttpStatusCode";
+import _ERROR from "../../http-status/error";
+import { fail } from "assert";
 
 describe('validateDTO', () => {
   const testSchema = z.object({
@@ -42,34 +44,16 @@ describe('validateDTO', () => {
     expect(mockResponse.json).not.toHaveBeenCalled();
   });
 
-  test('should return ErrorResponse with invalid email', () => {
+  test('should throw ValidationError with invalid email', () => {
     mockRequest.body.email = 'invalid-email';
     
     const middleware = validateDTO(testSchema);
-    middleware(mockRequest, mockResponse, mockNext);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Validation Error',
-      error: true,
-      metadata: {
-        description: 'The server could not understand the request due to invalid syntax.',
-        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
-        timestamp: expect.any(String),
-        code: HttpStatusCode.BAD_REQUEST,
-        status: 'BAD_REQUEST'
-      },
-      errors: [
-        {
-          field: 'email',
-          message: 'Invalid email format'
-        }
-      ]
-    });
+    
+    expect(() => middleware(mockRequest, mockResponse, mockNext)).toThrow(_ERROR.ValidationError);
+    expect(() => middleware(mockRequest, mockResponse, mockNext)).toThrow('Validation Error');
   });
 
-  test('should handle multiple validation errors', () => {
+  test('should throw ValidationError with multiple validation errors', () => {
     mockRequest.body = {
       name: 'J',
       email: 'invalid',
@@ -77,21 +61,14 @@ describe('validateDTO', () => {
     };
 
     const middleware = validateDTO(testSchema);
-    middleware(mockRequest, mockResponse, mockNext);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Validation Error',
-      error: true,
-      metadata: {
-        description: 'The server could not understand the request due to invalid syntax.',
-        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
-        timestamp: expect.any(String),
-        code: HttpStatusCode.BAD_REQUEST,
-        status: 'BAD_REQUEST'
-      },
-      errors: [
+    
+    try {
+      middleware(mockRequest, mockResponse, mockNext);
+      fail('Expected middleware to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(_ERROR.ValidationError);
+      expect((error as any).message).toBe('Validation Error');
+      expect((error as any).errors).toEqual([
         {
           field: 'name',
           message: 'Name must be at least 2 characters'
@@ -104,23 +81,22 @@ describe('validateDTO', () => {
           field: 'age',
           message: 'Age must be at least 18'
         }
-      ]
-    });
+      ]);
+    }
   });
 
-  test('should handle non-Zod errors', () => {
+  test('should throw original error for non-Zod errors', () => {
     const error = new Error('Test error');
     const mockSchema = {
       parse: mock(() => { throw error; }),
     };
 
     const middleware = validateDTO(mockSchema as any);
-    middleware(mockRequest, mockResponse, mockNext);
-
-    expect(mockNext).toHaveBeenCalledWith(error);
+    
+    expect(() => middleware(mockRequest, mockResponse, mockNext)).toThrow(error);
   });
 
-  test('should handle nested field validation errors', () => {
+  test('should throw ValidationError with nested field validation errors', () => {
     const nestedSchema = z.object({
       user: z.object({
         profile: z.object({
@@ -138,30 +114,23 @@ describe('validateDTO', () => {
     };
 
     const middleware = validateDTO(nestedSchema);
-    middleware(mockRequest, mockResponse, mockNext);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Validation Error',
-      error: true,
-      metadata: {
-        description: 'The server could not understand the request due to invalid syntax.',
-        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
-        timestamp: expect.any(String),
-        code: HttpStatusCode.BAD_REQUEST,
-        status: 'BAD_REQUEST'
-      },
-      errors: [
+    
+    try {
+      middleware(mockRequest, mockResponse, mockNext);
+      fail('Expected middleware to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(_ERROR.ValidationError);
+      expect((error as any).message).toBe('Validation Error');
+      expect((error as any).errors).toEqual([
         {
           field: 'user.profile.name',
           message: 'Name must be at least 2 characters'
         }
-      ]
-    });
+      ]);
+    }
   });
 
-  test('should validate query parameters', () => {
+  test('should throw ValidationError for invalid query parameters', () => {
     const querySchema = z.object({
       page: z.number().min(1, 'Page must be at least 1'),
     });
@@ -169,26 +138,19 @@ describe('validateDTO', () => {
     mockRequest.query = { page: 0 };
     
     const middleware = validateDTO(querySchema, 'query');
-    middleware(mockRequest, mockResponse, mockNext);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatusCode.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Validation Error',
-      error: true,
-      metadata: {
-        description: 'The server could not understand the request due to invalid syntax.',
-        documentation: 'https://tools.ietf.org/html/rfc7231#section-6.5.1',
-        timestamp: expect.any(String),
-        code: HttpStatusCode.BAD_REQUEST,
-        status: 'BAD_REQUEST'
-      },
-      errors: [
+    
+    try {
+      middleware(mockRequest, mockResponse, mockNext);
+      fail('Expected middleware to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(_ERROR.ValidationError);
+      expect((error as any).message).toBe('Validation Error');
+      expect((error as any).errors).toEqual([
         {
           field: 'page',
           message: 'Page must be at least 1'
         }
-      ]
-    });
+      ]);
+    }
   });
 });
