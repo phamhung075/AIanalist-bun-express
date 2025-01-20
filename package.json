@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development bun run --watch src/index.ts",
     "build": "tsc && bun run build:post",
-    "build:post": "node copy-dirs.js",
+    "build:post": "bun copy-dirs.ts",
     "start": "NODE_ENV=production bun ./dist/src/index.js",
     "clean": "if exist dist rmdir /s /q dist",
     "build:clean": "bun run clean && bun run build"
