@@ -27,7 +27,9 @@ export class SimpleLogger {
     }
 
     error(message: string, error: Error): void {
-        this.log('ERROR', message, { error: error.stack });
+        this.log('ERROR', message, {
+            error: error.toString() + '\n    ' + error.stack
+        });
     }
 
     warn(message: string, meta?: any): void {
