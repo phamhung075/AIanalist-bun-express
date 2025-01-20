@@ -85,6 +85,8 @@ export class AppService {
     app.use(displayRequest);
     app.use(responseLogger);
     // Initialize and display routes after loading all modules
+    // app.use(resourceUsageMiddleware); // Add the middleware to your app
+
     app.use("/", router);
     const routeDisplay = new RouteDisplay(app);
     routeDisplay.displayRoutes();
@@ -264,3 +266,4 @@ export class AppService {
 const appService = AppService.getInstance();
 const app = appService.app; // Export the Express app for testing
 export { app, appService };
+
