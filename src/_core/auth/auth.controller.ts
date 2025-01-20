@@ -7,9 +7,10 @@ import { IRegister, IAuth } from "./auth.interface";
 import AuthService from "./auth.service";
 import { config } from "../config/dotenv.config";
 import { Service } from "typedi";
+import { BindMethods } from "../decorators/bind-methods.decorator";
 
 @Service()
-
+@BindMethods()
 class AuthController {
   constructor(private readonly authService: AuthService) {}
 
