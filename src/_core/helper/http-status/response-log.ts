@@ -7,8 +7,12 @@ import fs from "fs";
 // Clean up the logDir path by removing quotes and converting to absolute path
 const LOGDIR = path.resolve(
   process.cwd(),
-  config.logDir.replace(/['"]/g, '') // Remove any quotes
+  (config.logDir || 'logs').replace(/['"]/g, '') // Add fallback value
 );
+
+interface Logger {
+  logError: (message: string) => void;
+}
 
 interface Logger {
   logError: (message: string) => void;
