@@ -1,8 +1,12 @@
 import 'reflect-metadata';
 import { test, expect, beforeAll, afterAll, describe } from 'bun:test';
 import { HttpStatusCode } from '@helper/http-status/common/HttpStatusCode';
+import { config } from '@config/dotenv.config';
 import { appService } from '../app.service';
 import type { Server } from 'http';
+
+// Ensure config is properly initialized for tests
+process.env.LOG_DIR = './logs';  // Set a default log directory for tests
 
 describe('AppService API Tests', () => {
   let server: ReturnType<typeof appService.listen>;
@@ -12,20 +16,29 @@ describe('AppService API Tests', () => {
   beforeAll(async () => {
     // Set environment variables
     process.env.NODE_ENV = 'test';
-    process.env.HTTPS = 'false'; // Ensure HTTPS is disabled for tests
-  
-    // Start the server on a random port
-    server = appService.listen();
-    serverInstance = await server;
-  
-    const address = serverInstance.address();
-    if (address && typeof address !== 'string') {
-      baseUrl = `http://localhost:${address.port}`;
-    } else {
-      baseUrl = `http://localhost:${process.env.PORT || 3000}`;
+    process.env.HTTPS = 'false';
+    
+    if (!config.logDir) {
+      console.error('Test configuration not loaded');
     }
   
-    console.log(`Server running at ${baseUrl}`);
+    // Start the server
+    try {
+      server = appService.listen();
+      serverInstance = await server;
+    
+      const address = serverInstance.address();
+      if (address && typeof address !== 'string') {
+        baseUrl = `http://localhost:${address.port}`;
+      } else {
+        baseUrl = `http://localhost:${process.env.PORT || 3000}`;
+      }
+    
+      console.log(`Test server running at ${baseUrl}`);
+    } catch (error) {
+      console.error('Failed to start test server:', error);
+      throw error;
+    }
   });
 
   test('should return 404 for an unknown route', async () => {
@@ -77,7 +90,6 @@ describe('AppService API Tests', () => {
     });
 
     expect(response.status).toBe(HttpStatusCode.NO_CONTENT);
-    // Check all required CORS headers
     expect(response.headers.get('access-control-allow-methods')).toBeDefined();
     expect(response.headers.get('access-control-allow-headers')).toBeDefined();
   });
@@ -103,10 +115,11 @@ describe('AppService API Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean shutdown
+    // Ensure clean shutdown
     if (serverInstance) {
       await new Promise<void>((resolve) => {
         serverInstance.close(() => {
+          console.log('Test server closed');
           resolve();
         });
       });
