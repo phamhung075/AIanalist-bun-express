@@ -592,14 +592,16 @@ The request is unauthenticated.
 ```
 
 Directory structure:
+Directory structure:
 ├── src/
 │   ├── _core/
 │   │   ├── auth/
-│   │   │   ├── strategies/
-│   │   │   │   └── jwt.strategy.ts
+│   │   │   ├── __specs__/
+│   │   │   │   ├── auth.controller.spec.ts
+│   │   │   │   ├── auth.repository.spec.ts
+│   │   │   │   └── auth.service.spec.ts
 │   │   │   ├── auth.controller.ts
 │   │   │   ├── auth.dto.ts
-│   │   │   ├── auth.handler.ts
 │   │   │   ├── auth.interface.ts
 │   │   │   ├── auth.module.ts
 │   │   │   ├── auth.repository.ts
@@ -613,10 +615,10 @@ Directory structure:
 │   │   │   └── firebase-admin.account.ts
 │   │   ├── database/
 │   │   │   └── firebase-admin-sdk/
-│   │   │       ├── __specs__/
-│   │   │       │   └── firebase-admin-utility.spec.ts
-│   │   │       ├── firebase-admin-utility.ts
+│   │   │       ├── firebase-test-config.ts
 │   │   │       └── index.ts
+│   │   ├── decorators/
+│   │   │   └── bind-methods.decorator.ts
 │   │   ├── helper/
 │   │   │   ├── asyncHandler/
 │   │   │   │   ├── __tests__/
@@ -660,6 +662,7 @@ Directory structure:
 │   │   │   ├── auth.middleware.ts
 │   │   │   ├── displayRequest.middleware.ts
 │   │   │   ├── errorHandler.ts
+│   │   │   ├── resourceUsageMiddleware.ts
 │   │   │   ├── responseLogger.middleware.ts
 │   │   │   └── start-time.middleware.ts
 │   │   └── server/
@@ -670,14 +673,6 @@ Directory structure:
 │   ├── modules/
 │   │   ├── _base/
 │   │   │   └── crud/
-│   │   │       ├── __mocks__/
-│   │   │       │   ├── __specs__/
-│   │   │       │   │   ├── BaseController.mocks.spec.ts
-│   │   │       │   │   ├── BaseRepository.mocks.spec.ts
-│   │   │       │   │   └── BaseService.mocks.spec.ts
-│   │   │       │   ├── BaseController.mocks.ts
-│   │   │       │   ├── BaseRepository.mocks.ts
-│   │   │       │   └── BaseService.mocks.ts
 │   │   │       ├── __specs__/
 │   │   │       │   ├── BaseController.spec.ts
 │   │   │       │   ├── BaseRepository.spec.ts
@@ -686,30 +681,38 @@ Directory structure:
 │   │   │       ├── BaseRepository.ts
 │   │   │       └── BaseService.ts
 │   │   ├── contact/
-│   │   │   ├── __tests__/
-│   │   │   │   ├── contact-controller.spec.ts
-│   │   │   │   ├── contact.handle.spec.ts
-│   │   │   │   ├── contact.repository.spec.ts
-│   │   │   │   ├── contact.route.spec.ts
-│   │   │   │   └── contact.service.spec.ts
 │   │   │   ├── contact.controller.ts
 │   │   │   ├── contact.dto.ts
-│   │   │   ├── contact.handler.ts
 │   │   │   ├── contact.interface.ts
 │   │   │   ├── contact.module.ts
 │   │   │   ├── contact.repository.ts
 │   │   │   ├── contact.service.ts
 │   │   │   ├── contact.validation.ts
 │   │   │   └── index.ts
+│   │   ├── otherModule/
+│   │   │   ├── otherModule.controller.ts
+│   │   │   ├── otherModule.dto.ts
+│   │   │   ├── otherModule.interface.ts
+│   │   │   ├── otherModule.module.ts
+│   │   │   ├── otherModule.repository.ts
+│   │   │   ├── otherModule.service.ts
+│   │   │   ├── otherModule.validation.ts
+│   │   │   └── index.ts
 │   │   └── index.ts
 │   ├── types/
 │   │   └── express.d.ts
 │   └── index.ts
+├── .firebaserc
 ├── .gitignore
 ├── bun.lockb
+├── check-dirs.ts
+├── copy-dirs.ts
+├── firebase.json
 ├── index.ts
 ├── package.json
 ├── README.md
+├── should
+├── test.README.md
 └── tsconfig.json
 
 ```
