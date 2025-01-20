@@ -3,11 +3,15 @@ import { BaseController } from '../_base/crud/BaseController';
 import type { CreateInput, UpdateInput } from './contact.dto';
 import type { IContact } from './contact.interface';
 import type ContactService from './contact.service';
+import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
 
 
-@Service('ContactController')
+@Service()
+@BindMethods()
 class ContactController extends BaseController<IContact, CreateInput, UpdateInput> {
-    constructor(private readonly contactService: ContactService) {
+    constructor(
+        protected readonly contactService: ContactService  // Change to protected and add @Inject()
+    ) {
         super(contactService);
     }
 }

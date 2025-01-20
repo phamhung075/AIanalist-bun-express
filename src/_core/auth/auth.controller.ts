@@ -6,10 +6,12 @@ import { getTokenCookies } from "../middleware/auth.middleware";
 import { IRegister, IAuth } from "./auth.interface";
 import AuthService from "./auth.service";
 import { config } from "../config/dotenv.config";
+import { Service } from "typedi";
 
+@Service()
 
 class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   register: RequestHandler = async (req: CustomRequest, res: Response) => {
     const body = req.body as IRegister;

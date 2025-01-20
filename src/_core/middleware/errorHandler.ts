@@ -13,6 +13,7 @@ export const notFoundMiddleware = (req: Request, res: Response, next: NextFuncti
 
 // Error Handler Middleware
 export const errorHandlerMiddleware = (error: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(error)
   logResponse(req, JSON.stringify(error, null, 2));
 
   // Already sent response

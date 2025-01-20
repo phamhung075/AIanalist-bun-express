@@ -6,15 +6,16 @@ import { UserCredential } from "firebase/auth";
 import _ERROR from "../helper/http-status/error";
 import { IRegister } from "./auth.interface";
 import AuthRepository from "./auth.repository";
+import { Service } from "typedi";
 
 
 
 
-
+@Service()
 export class AuthService {
     constructor(
-        private authRepository: AuthRepository,
-        private contactService: ContactService
+        private readonly authRepository: AuthRepository,
+        private readonly contactService: ContactService
     ) {}
 
     async register(registerData: IRegister): Promise<UserCredential> {

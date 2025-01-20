@@ -14,7 +14,9 @@ import {
 import { firebaseAdminAuth } from "../database/firebase-admin-sdk/index";
 import _ERROR from "../helper/http-status/error/index";
 import type { IAuth } from "./auth.interface";
+import { Service } from "typedi";
 
+@Service()
 class AuthRepository {
   private isTestEnvironment: boolean;
   private clientAuth; // For client-side operations

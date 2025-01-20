@@ -2,19 +2,37 @@ import AuthRepository from './auth.repository';
 import AuthService from './auth.service';
 import AuthController from './auth.controller';
 import { contactService } from '@/modules/contact/contact.module';
+import { Container } from 'typedi';
 
 class AuthModule {
+    private static instance: AuthModule;
+
     public authRepository: AuthRepository;
     public authService: AuthService;
     public authController: AuthController;
 
-    constructor() {
+    private constructor() {
+        // Initialize repository
         this.authRepository = new AuthRepository();
+        Container.set('AuthRepository', this.authRepository);
+
+        // Initialize service with dependencies
         this.authService = new AuthService(this.authRepository, contactService);
+        Container.set('AuthService', this.authService);
+
+        // Initialize controller
         this.authController = new AuthController(this.authService);
+        Container.set('AuthController', this.authController);
+    }
+
+    public static getInstance(): AuthModule {
+        if (!AuthModule.instance) {
+            AuthModule.instance = new AuthModule();
+        }
+        return AuthModule.instance;
     }
 }
 
-const authModule = new AuthModule();
+const authModule = AuthModule.getInstance();
 
 export const { authController, authService, authRepository } = authModule;

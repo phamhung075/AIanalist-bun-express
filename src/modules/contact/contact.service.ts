@@ -6,10 +6,12 @@ import type { IContact } from "./contact.interface";
 import type ContactRepository from "./contact.repository";
 
 
-@Service('ContactService')
+@Service()
 class ContactService extends BaseService<IContact> {
-    constructor(private readonly contactRepository: ContactRepository) {
-        super(contactRepository);
+    constructor(
+        protected readonly repository: ContactRepository
+    ) {
+        super(repository);
     }
 }
 

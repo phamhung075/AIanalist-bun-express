@@ -1,15 +1,15 @@
-import type { NextFunction, Request, Response } from 'express';
-type AsyncFunction = (
-  req: Request,
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { CustomRequest } from '../interfaces/CustomRequest.interface';
+// First, define a type that extends RequestHandler for async functions
+type AsyncRequestHandler = (
+  req: Request | CustomRequest,
   res: Response,
   next: NextFunction
-) => Promise<any>;
+) => Promise<void | any>;
 
-export const asyncHandler = (fn: AsyncFunction) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (res.headersSent) {
-      return;
-    }
+// The wrapper function needs to handle both sync and async handlers
+export const asyncHandler = 
+  (fn: RequestHandler | AsyncRequestHandler) => 
+  (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
-};

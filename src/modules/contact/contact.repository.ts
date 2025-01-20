@@ -3,7 +3,7 @@ import { Service } from 'typedi';
 import { BaseRepository } from '../_base/crud/BaseRepository';
 import type { IContact } from './contact.interface';
 
-@Service('ContactRepository')
+@Service()
 class ContactRepository extends BaseRepository<IContact> {
     constructor() {
         super('contacts');

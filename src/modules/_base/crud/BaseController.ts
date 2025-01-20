@@ -15,10 +15,15 @@ export abstract class BaseController<
     CreateDTO,
     UpdateDTO
 > {
-    protected service: BaseService<T>;
+    protected readonly service: BaseService<T>;
 
     constructor(service: BaseService<T>) {
+        if (!service) {
+            throw new Error('Service must be provided to BaseController');
+        }
         this.service = service;
+        // Add debug log
+        // console.log('BaseController constructor, service:', this.service);
     }
 
     async create(req: CustomRequest<CreateDTO>, res: Response, _next: NextFunction) {
