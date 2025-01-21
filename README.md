@@ -7,7 +7,6 @@
 - **Bun & Express.js:** Web server framework for handling HTTP requests.
 - **TypeScript:** Strong typing and better development experience.
 - **express-route-tracker:** Route management with HATEOAS support.
-- **dotenv:** Environment variable management.
 - **Firebase:** Database and authentication.
 - **Validation:** Zod.
 
