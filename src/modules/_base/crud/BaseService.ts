@@ -1,10 +1,8 @@
-import {
-  FetchPageResult,
-  PaginationOptions,
-} from "@/_core/helper/interfaces/FetchPageResult.interface";
+
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
 import { BaseRepository } from "./BaseRepository";
-import { PaginationInput } from "@/modules/contact/contact.dto";
 import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
+import { PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
 
 /**
  * Generic Service Class for CRUD Operations
@@ -17,11 +15,11 @@ export abstract class BaseService<T extends { id?: string }> {
   }
 
   async create(data: Omit<T, "id">): Promise<T | false> {
-    return await this.repository.create(data);
+    return await this.repository.create(data as T);
   }
 
   async createWithId(id: string, data: Omit<T, "id">): Promise<T> {
-    return await this.repository.createWithId(id, data);
+    return await this.repository.createWithId(id, data as T);
   }
 
   async getAll(pagination: PaginationInput): Promise<PaginationResult<T>> {
@@ -45,19 +43,12 @@ export abstract class BaseService<T extends { id?: string }> {
     return await this.repository.delete(id);
   }
 
-  async paginator(options: PaginationOptions): Promise<FetchPageResult<T>> {
+  async paginator(options: PaginationOptions): Promise<PaginationResult<T>> {
     try {
-      const result = await this.repository.paginator(options);
+      const result = await this.repository.paginate(options) as PaginationResult<T>;
 
       // Ensure the result matches FetchPageResult interface structure
-      return {
-        data: result.data || [],
-        totalItems: result.totalItems || 0,
-        count: result.count || 0,
-        page: result.page || 1,
-        limit: result.limit || 10,
-        totalPages: result.totalPages || 0,
-      };
+      return result;
     } catch (error) {
       console.error("Error in paginator:", error);
       throw error;

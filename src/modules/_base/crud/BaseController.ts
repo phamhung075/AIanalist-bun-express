@@ -178,9 +178,9 @@ export abstract class BaseController<
         all: all === "true",
       };
 
-      const paginationResult: PaginatedResult<T> = await this.service.paginator(
+      const paginationResult: PaginationResult<T> = await this.service.paginator(
         options
-      );
+      ) as PaginationResult<T>;
 
       return new _SUCCESS.OkSuccess({
         message: "Fetched paginated entities successfully",

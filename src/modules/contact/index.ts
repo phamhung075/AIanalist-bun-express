@@ -5,7 +5,8 @@ import { asyncHandler } from '@/_core/helper/asyncHandler/index';
 import { config } from '@/_core/config/dotenv.config';
 import { firebaseAuthMiddleware } from '@/_core/middleware/auth.middleware';
 import { contactController } from './contact.module';
-import { validateCreateDTO, validateIdDTO, validatePaginationDTO, validateUpdateDTO } from './contact.dto';
+import { validateCreateDTO, validateIdDTO,  validateUpdateDTO } from './contact.dto';
+import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
 
 // Create router with source tracking
 const router = createRouter(__filename);
