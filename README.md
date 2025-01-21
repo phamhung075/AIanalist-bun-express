@@ -496,7 +496,117 @@ postman: 200 OK
 Request successful. The server has responded as required.
 
 ```
-{"success":true,"message":"Fetched entities successfully","data":{},"pagination":{"data":[{"id":"hKcgv1n1eIPqhv5UlMI0kIUcRyk1","firstName":"Myrtis","lastName":"Hermann","phone":"06 67 36 17 49","address":"595 Viva Route","postalCode":"57825","city":"New Isadoreside","country":"France","email":"test.email25380@yopmail.com","createdAt":{"_seconds":1737391984,"_nanoseconds":351000000},"updatedAt":{"_seconds":1737391984,"_nanoseconds":351000000}},{"id":"fD2GU80lvTumZa7ZfmX6","firstName":"Ernesto","lastName":"Cummings","email":"test.email94603@yopmail.com","phone":"06 13 32 98 51","createdAt":{"_seconds":1737391684,"_nanoseconds":433000000},"updatedAt":{"_seconds":1737391684,"_nanoseconds":433000000}}],"totalItems":41,"count":2,"page":1,"totalPages":21,"limit":2,"hasNext":true,"hasPrev":false},"metadata":{"description":"The request has succeeded.","documentation":"https://tools.ietf.org/html/rfc7231#section-6.3.1","timestamp":"2025-01-21T00:08:22.706Z","responseTime":"240ms","code":200,"status":"OK"},"links":{"self":{"rel":"self","href":"localhost:3333/api/contact?page=1&sort=createdAt&order=desc&limit=2","method":"GET"},"first":{"rel":"first","href":"localhost:3333/?page=1","method":"GET"},"last":{"rel":"last","href":"localhost:3333/?page=21","method":"GET"},"create":{"title":"POST /","rel":"create","href":"localhost:3333/api/contact/","method":"POST"},"collection":{"title":"GET /","rel":"collection","href":"localhost:3333/api/contact/","method":"GET"},"item":{"title":"GET /:id","rel":"item","href":"localhost:3333/api/contact/:id","method":"GET"},"partial-update":{"title":"PATCH /:id","rel":"partial-update","href":"localhost:3333/api/contact/:id","method":"PATCH"},"delete":{"title":"DELETE /:id","rel":"delete","href":"localhost:3333/api/contact/:id","method":"DELETE"},"documentation":{"rel":"documentation","href":"localhost:3333/docs","method":"GET","title":"API Documentation"}}}
+{
+    "success": true,
+    "message": "Fetched entities successfully",
+    "data": {},
+    "pagination": {
+        "data": [
+            {
+                "id": "hKcgv1n1eIPqhv5UlMI0kIUcRyk1",
+                "firstName": "Myrtis",
+                "lastName": "Hermann",
+                "phone": "06 67 36 17 49",
+                "address": "595 Viva Route",
+                "postalCode": "57825",
+                "city": "New Isadoreside",
+                "country": "France",
+                "email": "test.email25380@yopmail.com",
+                "createdAt": {
+                    "_seconds": 1737391984,
+                    "_nanoseconds": 351000000
+                },
+                "updatedAt": {
+                    "_seconds": 1737391984,
+                    "_nanoseconds": 351000000
+                }
+            },
+            {
+                "id": "fD2GU80lvTumZa7ZfmX6",
+                "firstName": "Ernesto",
+                "lastName": "Cummings",
+                "email": "test.email94603@yopmail.com",
+                "phone": "06 13 32 98 51",
+                "createdAt": {
+                    "_seconds": 1737391684,
+                    "_nanoseconds": 433000000
+                },
+                "updatedAt": {
+                    "_seconds": 1737391684,
+                    "_nanoseconds": 433000000
+                }
+            }
+        ],
+        "totalItems": 41,
+        "count": 2,
+        "page": 1,
+        "totalPages": 21,
+        "limit": 2,
+        "hasNext": true,
+        "hasPrev": false
+    },
+    "metadata": {
+        "description": "The request has succeeded.",
+        "documentation": "https://tools.ietf.org/html/rfc7231#section-6.3.1",
+        "timestamp": "2025-01-21T00:08:22.706Z",
+        "responseTime": "240ms",
+        "code": 200,
+        "status": "OK"
+    },
+    "links": {
+        "self": {
+            "rel": "self",
+            "href": "localhost:3333/api/contact?page=1&sort=createdAt&order=desc&limit=2",
+            "method": "GET"
+        },
+        "first": {
+            "rel": "first",
+            "href": "localhost:3333/?page=1",
+            "method": "GET"
+        },
+        "last": {
+            "rel": "last",
+            "href": "localhost:3333/?page=21",
+            "method": "GET"
+        },
+        "create": {
+            "title": "POST /",
+            "rel": "create",
+            "href": "localhost:3333/api/contact/",
+            "method": "POST"
+        },
+        "collection": {
+            "title": "GET /",
+            "rel": "collection",
+            "href": "localhost:3333/api/contact/",
+            "method": "GET"
+        },
+        "item": {
+            "title": "GET /:id",
+            "rel": "item",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "GET"
+        },
+        "partial-update": {
+            "title": "PATCH /:id",
+            "rel": "partial-update",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "PATCH"
+        },
+        "delete": {
+            "title": "DELETE /:id",
+            "rel": "delete",
+            "href": "localhost:3333/api/contact/:id",
+            "method": "DELETE"
+        },
+        "documentation": {
+            "rel": "documentation",
+            "href": "localhost:3333/docs",
+            "method": "GET",
+            "title": "API Documentation"
+        }
+    }
+}
 ```
 
 `POST http://localhost:3333/api/contact`
