@@ -1,12 +1,14 @@
 import { firestore } from "@/_core/database/firebase-admin-sdk";
+import { API_CONFIG } from "@/_core/helper/http-status/common/api-config";
 import { createPagination } from "@/_core/helper/http-status/common/create-pagination";
 import _ERROR from "@/_core/helper/http-status/error";
 import {
   FetchPageResult,
   PaginationOptions,
 } from "@/_core/helper/interfaces/FetchPageResult.interface";
+import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 import { PaginationInput } from "@/modules/contact/contact.validation";
-import { Query } from "firebase-admin/firestore";
+import { DocumentSnapshot, OrderByDirection, Query } from "firebase-admin/firestore";
 
 /**
  * ✅ Generic Firestore Repository
@@ -57,35 +59,87 @@ export abstract class BaseRepository<T extends { id?: string }> {
     }
   }
 
-  /**
-   * ✅ Fetch all documents
-   */
-  // BaseRepository.ts
-  async getAll(pagination: PaginationInput): Promise<T[]> {
-    const page = pagination.page ?? 1;
-    const limit = pagination.limit ?? 10;
+  async getAll(pagination: PaginationInput): Promise<FetchPageResult<T>> {
+    const page = pagination.page ?? API_CONFIG.PAGINATION.DEFAULT_PAGE;
+    const limit = Math.min(
+      pagination.limit ?? API_CONFIG.PAGINATION.DEFAULT_LIMIT,
+      API_CONFIG.PAGINATION.MAX_LIMIT
+    );
     const sort = pagination.sort ?? "createdAt";
     const order = pagination.order ?? "desc";
+  
     try {
-      // Calculer l'offset pour Firestore (Firestore ne supporte pas le skip)
-      const offset = (page - 1) * limit;
-
-      // Construire la requête Firestore
-      let query = this.collection.orderBy(sort, order).limit(limit);
-
-      // Récupérer les données
-      const snapshot = await query.get();
-      const results = snapshot.docs.map((doc) => ({
+      // Build the base query
+      let query = this.collection.orderBy(sort, order);
+  
+      // If not the first page, get the last document from previous page
+      if (page > 1) {
+        const lastVisibleDoc = await this.getLastVisibleDoc(page - 1, limit, sort, order);
+        if (lastVisibleDoc) {
+          query = query.startAfter(lastVisibleDoc);
+        }
+      }
+  
+      // Apply limit and get documents
+      const snapshot = await query.limit(limit + 1).get(); // Get one extra doc to check if there's a next page
+      const docs = snapshot.docs;
+      
+      // Check if there's a next page
+      const hasNextPage = docs.length > limit;
+      if (hasNextPage) {
+        docs.pop(); // Remove the extra document we fetched
+      }
+  
+      // Map the documents to their data
+      const results = docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as T[];
-
-      return results;
+  
+      // Get an approximate count for total items (this is more efficient than getting exact count)
+      const approximateCount = (await this.collection.count().get()).data().count;
+      const totalPages = Math.ceil(approximateCount / limit);
+  
+      return {
+        data: results,
+        totalItems: approximateCount,
+        count: results.length,
+        page,
+        totalPages,
+        limit,
+        hasNext: hasNextPage,
+        hasPrev: page > 1,
+      };
     } catch (error: any) {
       this.handleFirestoreError(
         error,
         "Échec de la récupération des documents"
       );
+      throw error;
+    }
+  }
+  
+  // Helper method to get the last document from a specific page
+  private async getLastVisibleDoc(
+    page: number,
+    limit: number,
+    sort: string,
+    order: OrderByDirection
+  ): Promise<DocumentSnapshot | null> {
+    try {
+      const snapshot = await this.collection
+        .orderBy(sort, order)
+        .limit(page * limit)
+        .get();
+  
+      if (snapshot.empty || snapshot.docs.length < page * limit) {
+        return null;
+      }
+  
+      return snapshot.docs[snapshot.docs.length - 1];
+    } catch (error) {
+      console.error("Error getting last visible document:", error);
+      return null;
     }
   }
 

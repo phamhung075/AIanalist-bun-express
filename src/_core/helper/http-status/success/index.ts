@@ -193,6 +193,7 @@ class SuccessResponse {
             success: this.success,
             message: this.message,
             data: this.data,
+            pagination: this.pagination,
             metadata: {
                 ...this.metadata,
                 code: this.status,

@@ -4,6 +4,7 @@ import {
 } from "@/_core/helper/interfaces/FetchPageResult.interface";
 import { BaseRepository } from "./BaseRepository";
 import { PaginationInput } from "@/modules/contact/contact.dto";
+import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 
 /**
  * Generic Service Class for CRUD Operations
@@ -23,7 +24,7 @@ export abstract class BaseService<T extends { id?: string }> {
     return await this.repository.createWithId(id, data);
   }
 
-  async getAll(pagination: PaginationInput): Promise<T[]> {
+  async getAll(pagination: PaginationInput): Promise<PaginationResult<T>> {
     return await this.repository.getAll(pagination);
   }
 

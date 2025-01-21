@@ -10,6 +10,7 @@ import { Service } from "typedi";
 import { BaseService } from "./BaseService";
 import { PaginationInput } from "@/modules/contact/contact.dto";
 import { IContact } from "@/modules/contact/contact.interface";
+import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 
 /**
  * Generic Controller Class for CRUD and Pagination Operations
@@ -69,17 +70,12 @@ export abstract class BaseController<
 
         console.log('Pagination Input:', pagination); // Debug log
 
-        const results = await this.service.getAll(pagination);
+        const results = await this.service.getAll(pagination) as PaginationResult<T>;
         console.log("results ------------>", results)
 
         return new _SUCCESS.OkSuccess({
             message: 'Fetched entities successfully',
-            data: results,
-            pagination: {
-                data: results,
-                page: pagination.page,
-                limit: pagination.limit,
-            },
+            pagination: results,            
         }).send(res, _next);
     } catch (error) {
         _next(error);
