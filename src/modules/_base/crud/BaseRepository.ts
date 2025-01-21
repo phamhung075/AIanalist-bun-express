@@ -2,61 +2,118 @@ import { firestore } from "@/_core/database/firebase-admin-sdk";
 import { API_CONFIG } from "@/_core/helper/http-status/common/api-config";
 import { createPagination } from "@/_core/helper/http-status/common/create-pagination";
 import _ERROR from "@/_core/helper/http-status/error";
-import { PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
-import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.schema";
+import {
+  PaginatedResult,
+  PaginationOptions,
+} from "@/_core/helper/interfaces/Pagination.interface";
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
+import {
+  DocumentSnapshot,
+  OrderByDirection,
+  Query,
+  CollectionReference,
+  WhereFilterOp,
+  Timestamp,
+  QueryDocumentSnapshot,
+} from "firebase-admin/firestore";
 
-import { DocumentSnapshot, OrderByDirection, Query } from "firebase-admin/firestore";
-
+interface BaseDocument {
+  id?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
+}
 /**
- * ✅ Generic Firestore Repository
+ * Helper type to convert QueryDocumentSnapshot to DocumentSnapshot
  */
-export abstract class BaseRepository<T extends { id?: string }> {
+function convertToDocumentSnapshot(
+  doc: QueryDocumentSnapshot
+): DocumentSnapshot {
+  return doc as unknown as DocumentSnapshot;
+}
+/**
+ * Enhanced Generic Firestore Repository with improved error handling and features
+ */
+export abstract class BaseRepository<T extends BaseDocument> {
   protected collectionName: string;
+  protected softDelete: boolean;
 
-  constructor(collectionName: string) {
+  constructor(collectionName: string, options: { softDelete?: boolean } = {}) {
     this.collectionName = collectionName;
+    this.softDelete = options.softDelete ?? true;
   }
 
   /**
-   * ✅ Access Firestore Collection
+   * Access Firestore Collection with proper typing
    */
-  protected get collection(): FirebaseFirestore.CollectionReference {
+  protected get collection(): CollectionReference {
     return firestore.collection(this.collectionName);
   }
 
   /**
-   * ✅ Create a new document
+   * Create a new document with timestamps
    */
-  async create(data: Omit<T, "id">): Promise<T> {
+  async create(data: Omit<T, "id" | "createdAt" | "updatedAt">): Promise<T> {
     try {
-      const docRef = await this.collection.add({
+      const timestamp = new Date();
+      const docData = {
         ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id: docRef.id, ...data } as T;
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        deletedAt: null,
+      };
+
+      const docRef = await this.collection.add(docData);
+      return { id: docRef.id, ...docData } as T;
     } catch (error: any) {
       this.handleFirestoreError(error, "Failed to create document");
     }
   }
 
   /**
-   * ✅ Create a document with a specific ID
+   * Create a document with a specific ID
    */
-  async createWithId(id: string, data: Omit<T, "id">): Promise<T> {
+  async createWithId(
+    id: string,
+    data: Omit<T, "id" | "createdAt" | "updatedAt">
+  ): Promise<T> {
     try {
-      await this.collection.doc(id).set({
+      const timestamp = new Date();
+      const docData = {
         ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return { id, ...data } as T;
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        deletedAt: null,
+      };
+
+      const docRef = this.collection.doc(id);
+      const existingDoc = await docRef.get();
+
+      if (existingDoc.exists) {
+        throw new _ERROR.ConflictError({
+          message: `Document with ID ${id} already exists`,
+        });
+      }
+
+      await docRef.set(docData);
+      return { id, ...docData } as T;
     } catch (error: any) {
+      if (error instanceof _ERROR.ConflictError) {
+        throw error;
+      }
       this.handleFirestoreError(error, "Failed to create document with ID");
     }
   }
 
-  async getAll(pagination: PaginationInput): Promise<PaginatedResult<T>> {
+  /**
+   * Enhanced getAll with pagination, filtering, and soft delete handling
+   */
+  async getAll(pagination: PaginationInput): Promise<
+    Omit<PaginatedResult<T>, "lastVisible"> & {
+      lastVisible?: DocumentSnapshot;
+    }
+  > {
+    const startTime = Date.now();
     const page = pagination.page ?? API_CONFIG.PAGINATION.DEFAULT_PAGE;
     const limit = Math.min(
       pagination.limit ?? API_CONFIG.PAGINATION.DEFAULT_LIMIT,
@@ -64,101 +121,76 @@ export abstract class BaseRepository<T extends { id?: string }> {
     );
     const sort = pagination.sort ?? "createdAt";
     const order = pagination.order ?? "desc";
-  
+
     try {
-      // Build the base query
       let query = this.collection.orderBy(sort, order);
-  
-      // If not the first page, get the last document from previous page
+
+      if (this.softDelete) {
+        query = query.where("deletedAt", "==", null);
+      }
+
       if (page > 1) {
-        const lastVisibleDoc = await this.getLastVisibleDoc(page - 1, limit, sort, order);
-        if (lastVisibleDoc) {
-          query = query.startAfter(lastVisibleDoc);
+        const lastDoc = await this.getLastVisibleDoc(
+          page - 1,
+          limit,
+          sort,
+          order
+        );
+        if (lastDoc) {
+          query = query.startAfter(lastDoc);
         }
       }
-  
-      // Apply limit and get documents
-      const snapshot = await query.limit(limit + 1).get(); // Get one extra doc to check if there's a next page
+
+      const [snapshot, totalSnapshot] = await Promise.all([
+        query.limit(limit + 1).get(),
+        this.getTotalCount(query),
+      ]);
+
       const docs = snapshot.docs;
-      
-      // Check if there's a next page
       const hasNextPage = docs.length > limit;
+
       if (hasNextPage) {
-        docs.pop(); // Remove the extra document we fetched
+        docs.pop();
       }
-  
-      // Map the documents to their data
-      const results = docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as T[];
-  
-      // Get an approximate count for total items (this is more efficient than getting exact count)
-      const approximateCount = (await this.collection.count().get()).data().count;
-      const totalPages = Math.ceil(approximateCount / limit);
-  
+
+      const results = docs.map((doc) => this.mapQueryDocumentData(doc));
+      const totalItems = totalSnapshot.data().count;
+      const totalPages = Math.ceil(totalItems / limit);
+
       return {
         data: results,
-        total: approximateCount,
+        total: totalItems,
         page,
         totalPages,
         limit,
-        hasNextPage: hasNextPage,
+        hasNextPage,
         hasPrevPage: page > 1,
+        lastVisible: hasNextPage ? docs[docs.length - 1] : undefined,
+        executionTime: Date.now() - startTime,
       };
     } catch (error: any) {
-      this.handleFirestoreError(
-        error,
-        "Échec de la récupération des documents"
-      );
-    }
-  }
-  
-  // Helper method to get the last document from a specific page
-  private async getLastVisibleDoc(
-    page: number,
-    limit: number,
-    sort: string,
-    order: OrderByDirection
-  ): Promise<DocumentSnapshot | null> {
-    try {
-      const snapshot = await this.collection
-        .orderBy(sort, order)
-        .limit(page * limit)
-        .get();
-  
-      if (snapshot.empty || snapshot.docs.length < page * limit) {
-        return null;
-      }
-  
-      return snapshot.docs[snapshot.docs.length - 1];
-    } catch (error) {
-      console.error("Error getting last visible document:", error);
-      return null;
+      this.handleFirestoreError(error, "Failed to retrieve documents");
     }
   }
 
   /**
-   * ✅ get a document by ID
+   * Get document by ID with improved error handling
    */
-  async getById(id: string): Promise<T | null> {
+  async getById(id: string): Promise<T> {
     try {
-      console.log(`🔍 Fetching document with ID: ${id}`);
-
       const docRef = this.collection.doc(id);
       const doc = await docRef.get();
 
-      console.log(`📄 Document Snapshot Exists: ${doc.exists}`);
+      const data = this.mapDocumentData(doc);
 
-      if (!doc.exists) {
-        console.warn(`⚠️ Document with ID: ${id} does not exist`);
+      // Check for soft deleted documents
+      if (this.softDelete && data.deletedAt) {
         throw new _ERROR.NotFoundError({
-          message: `Document with ID ${id} not found`,
+          message: `Document with ID ${id} has been deleted`,
         });
       }
 
-      // console.log(`✅ Document found:`, doc.data());
-      return { id: doc.id, ...doc.data() } as T;
+      return data;
     } catch (error: any) {
       if (error instanceof _ERROR.NotFoundError) {
         throw error;
@@ -171,27 +203,34 @@ export abstract class BaseRepository<T extends { id?: string }> {
   }
 
   /**
-   * ✅ Update a document by ID
+   * Update document by ID with optimistic locking
    */
-  async update(id: string, updates: Partial<T>): Promise<T | null> {
+  async update(
+    id: string,
+    updates: Partial<Omit<T, "id" | "createdAt">>
+  ): Promise<T> {
     try {
       const docRef = this.collection.doc(id);
       const doc = await docRef.get();
 
-      if (!doc.exists) {
-        console.warn(`⚠️ Document with ID: ${id} does not exist`);
+      const data = this.mapDocumentData(doc);
+
+      // Check for soft deleted documents
+      if (this.softDelete && data.deletedAt) {
         throw new _ERROR.NotFoundError({
-          message: `Document with ID ${id} not found`,
+          message: `Document with ID ${id} has been deleted`,
         });
       }
 
-      await docRef.update({
+      const updateData = {
         ...updates,
         updatedAt: new Date(),
-      });
+      };
+
+      await docRef.update(updateData);
 
       const updatedDoc = await docRef.get();
-      return { id: updatedDoc.id, ...updatedDoc.data() } as T;
+      return this.mapDocumentData(updatedDoc);
     } catch (error: any) {
       if (error instanceof _ERROR.NotFoundError) {
         throw error;
@@ -204,7 +243,7 @@ export abstract class BaseRepository<T extends { id?: string }> {
   }
 
   /**
-   * ✅ Delete a document by ID
+   * Delete document with support for soft delete
    */
   async delete(id: string): Promise<boolean> {
     try {
@@ -212,13 +251,20 @@ export abstract class BaseRepository<T extends { id?: string }> {
       const doc = await docRef.get();
 
       if (!doc.exists) {
-        console.warn(`⚠️ Document with ID: ${id} does not exist`);
         throw new _ERROR.NotFoundError({
           message: `Document with ID ${id} not found`,
         });
       }
 
-      await docRef.delete();
+      if (this.softDelete) {
+        await docRef.update({
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } else {
+        await docRef.delete();
+      }
+
       return true;
     } catch (error: any) {
       if (error instanceof _ERROR.NotFoundError) {
@@ -232,9 +278,14 @@ export abstract class BaseRepository<T extends { id?: string }> {
   }
 
   /**
-   * ✅ Paginated Query
+   * Enhanced paginator with filtering and sorting
    */
-  async paginator(options: PaginationOptions): Promise<PaginatedResult<T>> {
+  async paginate(options: PaginationOptions): Promise<
+    Omit<PaginatedResult<T>, "lastVisible"> & {
+      lastVisible?: DocumentSnapshot;
+    }
+  > {
+    const startTime = Date.now();
     try {
       const {
         page = 1,
@@ -247,17 +298,31 @@ export abstract class BaseRepository<T extends { id?: string }> {
 
       let query: Query = this.collection;
 
-      // Apply filters
+      if (this.softDelete) {
+        query = query.where("deletedAt", "==", null);
+      }
+
       for (const filter of filters) {
-        query = query.where(filter.key, filter.operator, filter.value);
+        if (filter.value !== undefined && filter.value !== null) {
+          const value =
+            filter.value instanceof Date
+              ? Timestamp.fromDate(filter.value)
+              : filter.value;
+          query = query.where(
+            filter.key,
+            filter.operator as WhereFilterOp,
+            value
+          );
+        }
       }
 
-      // Apply sorting
       if (orderBy) {
-        query = query.orderBy(orderBy.field, orderBy.direction || "asc");
+        const orders = Array.isArray(orderBy) ? orderBy : [orderBy];
+        orders.forEach(({ field, direction }) => {
+          query = query.orderBy(field, direction || "asc");
+        });
       }
 
-      // Apply pagination
       if (!all) {
         if (lastVisible) {
           query = query.startAfter(lastVisible);
@@ -265,39 +330,193 @@ export abstract class BaseRepository<T extends { id?: string }> {
         query = query.limit(limit);
       }
 
-      const snapshot = await query.get();
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as T[];
+      const [snapshot, totalSnapshot] = await Promise.all([
+        query.get(),
+        this.getTotalCount(query),
+      ]);
 
-      const totalSnapshot = await firestore
-        .collection(this.collectionName)
-        .count()
-        .get();
-      const totalItems = totalSnapshot.data()?.count || 0;
+      const data = snapshot.docs.map((doc) => this.mapQueryDocumentData(doc));
+      const total = totalSnapshot.data().count;
+      const totalPages = Math.ceil(total / limit);
 
-      return createPagination<T>(data, totalItems, page, limit);
+      const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      return {
+        data,
+        total,
+        page,
+        totalPages,
+        limit,
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1,
+        lastVisible: lastDoc,
+        executionTime: Date.now() - startTime,
+        appliedFilters: {
+          filters: filters.reduce((acc, filter) => {
+            if (typeof filter.key === "string") {
+              (acc as any)[filter.key] =
+                filter.value !== undefined ? filter.value : null;
+            }
+            return acc;
+          }, {}),
+          orderBy: Array.isArray(orderBy)
+            ? orderBy.reduce(
+                (acc, { field, direction }) => ({
+                  ...acc,
+                  [field]: direction || "asc",
+                }),
+                {}
+              )
+            : orderBy
+            ? { [orderBy.field]: orderBy.direction || "asc" }
+            : undefined,
+        },
+      };
     } catch (error: any) {
       this.handleFirestoreError(error, "Failed to paginate documents");
     }
   }
 
   /**
-   * ✅ Unified Error Handling
+   * Helper method to get the last visible document
+   */
+  private async getLastVisibleDoc(
+    page: number,
+    limit: number,
+    sort: string,
+    order: OrderByDirection
+  ): Promise<DocumentSnapshot | null> {
+    try {
+      let query = this.collection.orderBy(sort, order);
+
+      if (this.softDelete) {
+        query = query.where("deletedAt", "==", null);
+      }
+
+      const snapshot = await query.limit(page * limit).get();
+
+      if (snapshot.empty || snapshot.docs.length < page * limit) {
+        return null;
+      }
+
+      return snapshot.docs[snapshot.docs.length - 1];
+    } catch (error) {
+      console.error("Error getting last visible document:", error);
+      return null;
+    }
+  }
+  /**
+   * Helper method to get total count with filters
+   */
+  private async getTotalCount(
+    query: Query
+  ): Promise<{ data: () => { count: number } }> {
+    return query.count().get();
+  }
+
+  /**
+   * Helper method to map document data with proper typing
+   */
+  private mapDocumentData(doc: DocumentSnapshot | QueryDocumentSnapshot): T {
+    if (!doc.exists) {
+      throw new _ERROR.NotFoundError({
+        message: `Document with ID ${doc.id} not found`,
+      });
+    }
+  
+    const data = doc.data();
+    if (!data) {
+      throw new _ERROR.NotFoundError({
+        message: `No data found for document ${doc.id}`,
+      });
+    }
+  
+    // Convert Firestore Timestamps to JavaScript Dates
+    const convertTimestamp = (field: any) => {
+      if (!field) return null;
+      return field instanceof Date ? field : field.toDate();
+    };
+  
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: convertTimestamp(data.createdAt),
+      updatedAt: convertTimestamp(data.updatedAt),
+      deletedAt: convertTimestamp(data.deletedAt),
+    } as T;
+  }
+
+  /**
+   * Helper method specifically for mapping QueryDocumentSnapshot
+   * Used in list operations where we know the document exists
+   */
+  private mapQueryDocumentData(doc: QueryDocumentSnapshot): T {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      ...(data.createdAt && {
+        createdAt:
+          data.createdAt instanceof Date
+            ? data.createdAt
+            : data.createdAt.toDate(),
+      }),
+      ...(data.updatedAt && {
+        updatedAt:
+          data.updatedAt instanceof Date
+            ? data.updatedAt
+            : data.updatedAt.toDate(),
+      }),
+      ...(data.deletedAt && {
+        deletedAt:
+          data.deletedAt instanceof Date
+            ? data.deletedAt
+            : data.deletedAt.toDate(),
+      }),
+    } as T;
+  }
+
+  /**
+   * Enhanced error handling with specific error types
    */
   private handleFirestoreError(error: any, defaultMessage: string): never {
     console.error("❌ Firestore Error:", error);
 
-    if (error instanceof _ERROR.NotFoundError) {
+    if (error instanceof _ERROR.ErrorResponse) {
       throw error;
     }
 
     switch (error.code) {
       case "permission-denied":
-        throw new _ERROR.ForbiddenError({ message: "Permission denied" });
+        throw new _ERROR.ForbiddenError({
+          message: "Permission denied",
+          error: error.message,
+        });
       case "not-found":
-        throw new _ERROR.NotFoundError({ message: "Resource not found" });
+        throw new _ERROR.NotFoundError({
+          message: "Resource not found",
+          error: error.message,
+        });
+      case "already-exists":
+        throw new _ERROR.ConflictError({
+          message: "Resource already exists",
+          error: error.message,
+        });
+      case "resource-exhausted":
+        throw new _ERROR.TooManyRequestsError({
+          message: "Rate limit exceeded",
+          error: error.message,
+        });
+      case "failed-precondition":
+        throw new _ERROR.BadRequestError({
+          message: "Operation failed due to document state",
+          error: error.message,
+        });
+      case "cancelled":
+        throw new _ERROR.ServiceUnavailableError({
+          message: "Operation cancelled",
+          error: error.message,
+        });
       default:
         throw new _ERROR.InternalServerError({
           message: defaultMessage,

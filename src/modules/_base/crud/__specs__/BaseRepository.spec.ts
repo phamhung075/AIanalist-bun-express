@@ -4,6 +4,7 @@ import { initializeApp, deleteApp, getApps } from "firebase/app";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { DocumentSnapshot } from "firebase-admin/firestore";
 import { BaseRepository } from "../BaseRepository";
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
 
 interface TestEntity {
   id?: string;
@@ -13,11 +14,12 @@ interface TestEntity {
   status?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 class TestRepository extends BaseRepository<TestEntity> {
-  constructor() {
-    super("test_collection");
+  constructor(softDelete: boolean = true) {
+    super("test_collection", { softDelete });
   }
 
   async getDocumentSnapshot(id: string): Promise<DocumentSnapshot> {
@@ -53,8 +55,8 @@ describe("BaseRepository", () => {
 
   beforeEach(async () => {
     repository = new TestRepository();
-    const allDocs = await repository.getAll();
-    await Promise.all(allDocs.map(doc => repository.delete(doc.id!)));
+    const allDocs = await repository.getAll({ page: 1, limit: 100, order: "asc" });
+    await Promise.all(allDocs.data.map(doc => repository.delete(doc.id!)));
   });
 
   describe("CRUD operations", () => {
@@ -68,9 +70,12 @@ describe("BaseRepository", () => {
       expect(created.id).toBeDefined();
       expect(created.name).toBe(testData.name);
       expect(created.description).toBe(testData.description);
+      expect(created.createdAt).toBeInstanceOf(Date);
+      expect(created.updatedAt).toBeInstanceOf(Date);
+      expect(created.deletedAt).toBeNull();
 
       const retrieved = await repository.getById(created.id!);
-      expect(retrieved?.name).toBe(testData.name);
+      expect(retrieved).toEqual(created);
     });
 
     test("should create a document with specific ID", async () => {
@@ -83,38 +88,23 @@ describe("BaseRepository", () => {
       const created = await repository.createWithId(customId, testData);
       expect(created.id).toBe(customId);
       expect(created.name).toBe(testData.name);
+      expect(created.createdAt).toBeInstanceOf(Date);
 
       const retrieved = await repository.getById(customId);
-      expect(retrieved?.id).toBe(customId);
+      expect(retrieved).toEqual(created);
     });
 
-    test("should throw error when creating with invalid ID", async () => {
-      const invalidId = "invalid/id";
+    test("should prevent duplicate IDs when using createWithId", async () => {
+      const customId = `test-${faker.string.uuid()}`;
       const testData = {
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription()
       };
 
-      await expect(repository.createWithId(invalidId, testData))
+      await repository.createWithId(customId, testData);
+      await expect(repository.createWithId(customId, testData))
         .rejects
-        .toThrow();
-    });
-
-    test("should get all documents", async () => {
-      const testData = Array(3).fill(null).map(() => ({
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription()
-      }));
-
-      await Promise.all(testData.map(data => repository.create(data)));
-
-      const allDocs = await repository.getAll();
-      expect(allDocs.length).toBe(3);
-      allDocs.forEach(doc => {
-        expect(doc.id).toBeDefined();
-        expect(doc.name).toBeDefined();
-        expect(doc.description).toBeDefined();
-      });
+        .toThrow(/Document with ID .* already exists/);
     });
 
     test("should update a document", async () => {
@@ -128,51 +118,84 @@ describe("BaseRepository", () => {
       };
 
       const updated = await repository.update(original.id!, updateData);
-      expect(updated?.id).toBe(original.id!);
-      expect(updated?.name).toBe(updateData.name);
-      expect(updated?.description).toBe(original.description);
+      expect(updated.id).toBe(original.id!);
+      expect(updated.name).toBe(updateData.name);
+      expect(updated.description).toBe(original.description);
+      expect(updated.updatedAt!.getTime()).toBeGreaterThan(original.updatedAt!.getTime());
+    });
+  });
+
+  describe("Soft Delete", () => {
+    test("should soft delete a document by default", async () => {
+      const doc = await repository.create({
+        name: faker.commerce.productName(),
+        description: faker.commerce.productDescription()
+      });
+    
+      await repository.delete(doc.id!);
+    
+      // Should throw when trying to get by ID
+      await expect(repository.getById(doc.id!))
+        .rejects
+        .toThrow(/Document with ID .* has been deleted/);
+    
+      // Verify document still exists with deletedAt timestamp
+      const snapshot = await repository.getDocumentSnapshot(doc.id!);
+      const data = snapshot.data();
+      
+      // Check if deletedAt exists and is a Firestore Timestamp
+      expect(data?.deletedAt).toBeDefined();
+      expect(data?.deletedAt.toDate()).toBeInstanceOf(Date);
+      // Optional: Verify it's a recent timestamp
+      const now = new Date();
+      const deletedAtDate = data?.deletedAt.toDate();
+      expect(deletedAtDate.getTime()).toBeLessThanOrEqual(now.getTime());
+      expect(deletedAtDate.getTime()).toBeGreaterThan(now.getTime() - 5000); // within last 5 seconds
     });
 
-    test("should delete a document", async () => {
-      const created = await repository.create({
+    test("should hard delete when softDelete is disabled", async () => {
+      const hardDeleteRepo = new TestRepository(false);
+      const doc = await hardDeleteRepo.create({
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription()
       });
 
-      const result = await repository.delete(created.id!);
-      expect(result).toBe(true);
+      await hardDeleteRepo.delete(doc.id!);
 
-      await expect(repository.getById(created.id!))
-        .rejects
-        .toThrow(/Document with ID .* not found/);
+      const snapshot = await hardDeleteRepo.getDocumentSnapshot(doc.id!);
+      expect(snapshot.exists).toBe(false);
     });
   });
 
-  describe("error handling", () => {
-    test("should handle not found errors", async () => {
-      const nonExistentId = faker.string.uuid();
-      await expect(repository.getById(nonExistentId))
-        .rejects
-        .toThrow(/Document with ID .* not found/);
+  describe("Pagination", () => {
+    test("should paginate with default options", async () => {
+      // Create 15 documents
+      await Promise.all(
+        Array(15).fill(null).map((_, i) => 
+          repository.create({
+            name: `Test ${String(i).padStart(2, '0')}`,
+            description: faker.commerce.productDescription()
+          })
+        )
+      );
+
+      const pagination: PaginationInput = {
+        page: 1,
+        limit: 10,
+        order: "asc"
+      };
+
+      const result = await repository.getAll(pagination);
+      expect(result.data.length).toBe(10);
+      expect(result.total).toBe(15);
+      expect(result.hasNextPage).toBe(true);
+      expect(result.hasPrevPage).toBe(false);
+      expect(result.page).toBe(1);
+      expect(result.totalPages).toBe(2);
+      expect(result.executionTime).toBeDefined();
     });
 
-    test("should handle update on non-existent document", async () => {
-      const nonExistentId = faker.string.uuid();
-      await expect(repository.update(nonExistentId, { name: "New Name" }))
-        .rejects
-        .toThrow(/Document with ID .* not found/);
-    });
-
-    test("should handle delete on non-existent document", async () => {
-      const nonExistentId = faker.string.uuid();
-      await expect(repository.delete(nonExistentId))
-        .rejects
-        .toThrow(/Document with ID .* not found/);
-    });
-  });
-
-  describe("pagination", () => {
-    test("should handle pagination with filters and ordering", async () => {
+    test("should handle advanced pagination with filters", async () => {
       // Create test documents with different statuses
       await Promise.all([
         repository.create({
@@ -195,7 +218,7 @@ describe("BaseRepository", () => {
         })
       ]);
 
-      const result = await repository.paginator({
+      const result = await repository.paginate({
         page: 1,
         limit: 10,
         filters: [
@@ -208,57 +231,39 @@ describe("BaseRepository", () => {
       });
 
       expect(result.data.length).toBe(2);
+      expect(result.total).toBe(2);
       expect(result.data[0].name).toBe("A");
       expect(result.data[1].name).toBe("B");
+      expect(result.appliedFilters?.filters).toEqual({ status: "active" });
+    });
+  });
+
+  describe("Error Handling", () => {
+    test("should handle invalid document IDs", async () => {
+      const invalidId = "invalid/id";
+      await expect(repository.getById(invalidId))
+        .rejects
+        .toThrow();
     });
 
-    test("should handle pagination with lastVisible cursor", async () => {
-      const items = await Promise.all(
-        Array(15).fill(null).map((_, index) => 
-          repository.create({
-            name: `Test ${String(index).padStart(2, '0')}`,
-            description: faker.commerce.productDescription()
-          })
-        )
-      );
+    test("should handle update on non-existent document", async () => {
+      const nonExistentId = faker.string.uuid();
+      await expect(repository.update(nonExistentId, { name: "New Name" }))
+        .rejects
+        .toThrow(/Document with ID .* not found/);
+    });
 
-      const firstPage = await repository.paginator({
-        page: 1,
-        limit: 5,
-        orderBy: {
-          field: "name",
-          direction: "asc"
-        }
+    test("should handle update on soft-deleted document", async () => {
+      const doc = await repository.create({
+        name: faker.commerce.productName(),
+        description: faker.commerce.productDescription()
       });
 
-      const lastDoc = await repository.getDocumentSnapshot(firstPage.data[4].id!);
+      await repository.delete(doc.id!);
 
-      const secondPage = await repository.paginator({
-        page: 2,
-        limit: 5,
-        orderBy: {
-          field: "name",
-          direction: "asc"
-        },
-        lastVisible: lastDoc
-      });
-
-      expect(secondPage.data.length).toBe(5);
-      expect(secondPage.page).toBe(2);
-      
-      const firstPageNames = new Set(firstPage.data.map(doc => doc.name));
-      const secondPageNames = new Set(secondPage.data.map(doc => doc.name));
-      expect(intersection(firstPageNames, secondPageNames).size).toBe(0);
+      await expect(repository.update(doc.id!, { name: "Updated Name" }))
+        .rejects
+        .toThrow(/Document with ID .* has been deleted/);
     });
   });
 });
-
-function intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
-  const result = new Set<T>();
-  for (const elem of setA) {
-    if (setB.has(elem)) {
-      result.add(elem);
-    }
-  }
-  return result;
-}

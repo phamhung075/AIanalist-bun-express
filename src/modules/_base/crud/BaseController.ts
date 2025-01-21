@@ -7,7 +7,7 @@ import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 import { NextFunction, Response } from "express";
 import { Service } from "typedi";
 import { BaseService } from "./BaseService";
-import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.schema";
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
 
 /**
  * Generic Controller Class for CRUD and Pagination Operations
