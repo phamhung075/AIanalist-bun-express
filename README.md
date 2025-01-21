@@ -1,6 +1,9 @@
 # Monolith Modular RESTful API HATEOAS Implementation Guide with Bun, Express.js, and TypeScript
+
 (on progress)
+
 ## 📚 **Project Foundation and Tools**
+
 - **Bun & Express.js:** Web server framework for handling HTTP requests.
 - **TypeScript:** Strong typing and better development experience.
 - **express-route-tracker:** Route management with HATEOAS support.
@@ -9,6 +12,7 @@
 - **Validation:** Zod.
 
 ## 📖 **Key RESTful API Design Principles**
+
 1. **Resources:** Represent data as resources (e.g., contacts, products).
 2. **HTTP Methods:**
    - **GET:** Retrieve data.
@@ -21,7 +25,9 @@
 5. **JSON:** Use JSON for data exchange.
 
 ## 🛠️ **Implementation Steps**
+
 ### 0. **environment**
+
 ```
 ├── src/
 │   ├── environment/
@@ -32,6 +38,7 @@
 ```
 
 .env.development
+
 ```
 NODE_ENV=development
 PORT=3333
@@ -54,122 +61,139 @@ FIREBASE_MEASUREMENT_ID=G-xxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### 1. **Router Creation**
+
 - Use `createRouter(__filename)` for defining routes.
 
 **Example:**
+
 ```typescript
-import { createRouter } from 'express-route-tracker';
-import { Router } from 'express';
+import { createRouter } from "express-route-tracker";
+import { Router } from "express";
 
 const router: Router = createRouter(__filename);
 
-router.get('/example', (req, res) => {
-  res.json({ message: 'Hello from example route!' });
+router.get("/example", (req, res) => {
+  res.json({ message: "Hello from example route!" });
 });
 
 export default router;
 ```
+
 - Track file sources with `express-route-tracker`.
 
 ### 2. **HATEOAS Integration**
+
 - Add `createHATEOASMiddleware` to your routes.
 
 **Example:**
+
 ```typescript
-import { createHATEOASMiddleware } from 'express-route-tracker';
-import { Router } from 'express';
+import { createHATEOASMiddleware } from "express-route-tracker";
+import { Router } from "express";
 
 const router: Router = createRouter(__filename);
 
-router.use(createHATEOASMiddleware({
-  autoIncludeSameRoute: true,
-  baseUrl: '/api',
-  includePagination: true,
-  customLinks: {
-    self: '/api/example',
-    docs: '/api/docs'
-  }
-}));
+router.use(
+  createHATEOASMiddleware({
+    autoIncludeSameRoute: true,
+    baseUrl: "/api",
+    includePagination: true,
+    customLinks: {
+      self: "/api/example",
+      docs: "/api/docs",
+    },
+  })
+);
 
-router.get('/example', (req, res) => {
-  res.json({ message: 'Hello with HATEOAS links!' });
+router.get("/example", (req, res) => {
+  res.json({ message: "Hello with HATEOAS links!" });
 });
 
 export default router;
 ```
+
 - Enable pagination and custom link generation.
 
 ### 3. **Module-Based Routes**
+
 - Organize routes in dedicated directories (e.g., `src/modules/contact`).
 
 ### 4. **Controllers**
+
 - Handle incoming requests.
 
 **Example:**
+
 ```typescript
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 import _ERROR from "../helper/http-status/error/index.js";
 import _SUCCESS from "../helper/http-status/success/index.js";
 
-export const getExampleData = (req: CustomRequest, res: Response, _next: NextFunction) => {
+export const getExampleData = (
+  req: CustomRequest,
+  res: Response,
+  _next: NextFunction
+) => {
   try {
-    const data = { id: 1, name: 'Sample Data' };
+    const data = { id: 1, name: "Sample Data" };
     return new _SUCCESS.OkSuccess({
-                message: 'Fetched entity by ID successfully',
-                data: entity,
-            }).send(res, _next);
+      message: "Fetched entity by ID successfully",
+      data: entity,
+    }).send(res, _next);
   } catch (error) {
     _next(error);
   }
 };
 
-
 //example error throw on controller or middleware
- if (!token) {
-    return new _ERROR.UnauthorizedError({
-      message: "Unauthorized: No token provided",
-    }).send(res, next);
-  }
-
+if (!token) {
+  return new _ERROR.UnauthorizedError({
+    message: "Unauthorized: No token provided",
+  }).send(res, next);
+}
 
 //example error throw
- if (!token) {
-    return new _ERROR.UnauthorizedError({
-      message: "Unauthorized: No token provided",
-    });
-  }
-
+if (!token) {
+  return new _ERROR.UnauthorizedError({
+    message: "Unauthorized: No token provided",
+  });
+}
 ```
+
 - Validate data using `validateSchema(CreateContactSchema)`.
 
 ### 5. **Services**
+
 - Encapsulate business logic (e.g., `contact.service.ts`).
 
 **Example:**
+
 ```typescript
-import { firestore } from '@/core/database/firebase';
+import { firestore } from "@/core/database/firebase";
 
 export class ContactService {
   async getContactById(contactId: string) {
     try {
-      const contactRef = firestore.collection('contacts').doc(contactId);
+      const contactRef = firestore.collection("contacts").doc(contactId);
       const doc = await contactRef.get();
       if (!doc.exists) {
-        throw new Error('Contact not found');
+        throw new Error("Contact not found");
       }
       return doc.data();
     } catch (error) {
-      console.error('Failed to fetch contact:', error);
+      console.error("Failed to fetch contact:", error);
       throw error;
     }
   }
 
   async createContact(contactData: any) {
     try {
-      const contactRef = await firestore.collection('contacts').add(contactData);
+      const contactRef = await firestore
+        .collection("contacts")
+        .add(contactData);
       return { id: contactRef.id, ...contactData };
     } catch (error) {
-      console.error('Failed to create contact:', error);
+      console.error("Failed to create contact:", error);
       throw error;
     }
   }
@@ -177,24 +201,29 @@ export class ContactService {
 ```
 
 ### 6. **Repositories**
+
 - Abstract data access logic (e.g., `contact.repository.ts`).
 
-
 ### 7. **Validation**
+
 - Employ **Zod** for schema-based input validation.
 
 ## 🔗 **HATEOAS Details**
+
 - Automatically generates hypermedia links (`self`, `next`, `prev`).
 - Pagination links are added with `includePagination`.
 
 ## ⚙️ **Configuration**
+
 - `src/_core/helper/http-status/common/api-config.ts` manages API prefix, pagination, rate limits, and CORS.
 
 ## 🚨 **Error Management**
+
 - Centralized error handling with `RestHandler.error`.
 - Error codes defined in `HttpStatusCode.ts`.
 
 ## ✅ **Steps Summary**
+
 1. Define Resources.
 2. Map Routes.
 3. Implement Controllers.
@@ -205,6 +234,7 @@ export class ContactService {
 8. Handle Errors.
 
 ## 📷 **Example Screenshot**
+
 ![Run](https://scontent.fctt1-1.fna.fbcdn.net/v/t1.15752-9/471453803_566124249589841_3236167951397755768_n.png?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_ohc=D92g0dM9ZrYQ7kNvgHSxNH_&_nc_zt=23&_nc_ht=scontent.fctt1-1.fna&oh=03_Q7cD1gGOqt-n_WnUGkELyypLJfGj-a2mWbIntisgXIQsuBMkcg&oe=6799456B)
 
 ![Console Log request](https://scontent.fctt1-1.fna.fbcdn.net/v/t1.15752-9/462573393_637184128693842_7510104037535305269_n.png?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_ohc=Q6xKSFbm_pwQ7kNvgE78TQJ&_nc_zt=23&_nc_ht=scontent.fctt1-1.fna&oh=03_Q7cD1gFwjoZ1Og6Xru1QNoShJ0b9aL6TVv0aeasS7VKq3GMb8g&oe=67995635)
@@ -224,6 +254,7 @@ postman: 200 OK
 Request successful. The server has responded as required.
 
 access-token and refresh token is set on cookies
+
 ```
 {
     "success": true,
@@ -294,6 +325,7 @@ access-token and refresh token is set on cookies
 postman: 200 OK
 
 Request successful. The server has responded as required.
+
 ```
 {
     "success": true,
@@ -377,6 +409,7 @@ Request successful. The server has responded as required.
 postman: 200 OK
 
 Request successful. The server has responded as required.
+
 ```
 {
     "success": true,
@@ -456,6 +489,15 @@ Request successful. The server has responded as required.
 }
 ```
 
+`http://localhost:3333/api/contact?page=1&limit=2&sort=createdAt&order=desc`
+
+postman: 200 OK
+
+Request successful. The server has responded as required.
+
+```
+{"success":true,"message":"Fetched entities successfully","data":{},"pagination":{"data":[{"id":"hKcgv1n1eIPqhv5UlMI0kIUcRyk1","firstName":"Myrtis","lastName":"Hermann","phone":"06 67 36 17 49","address":"595 Viva Route","postalCode":"57825","city":"New Isadoreside","country":"France","email":"test.email25380@yopmail.com","createdAt":{"_seconds":1737391984,"_nanoseconds":351000000},"updatedAt":{"_seconds":1737391984,"_nanoseconds":351000000}},{"id":"fD2GU80lvTumZa7ZfmX6","firstName":"Ernesto","lastName":"Cummings","email":"test.email94603@yopmail.com","phone":"06 13 32 98 51","createdAt":{"_seconds":1737391684,"_nanoseconds":433000000},"updatedAt":{"_seconds":1737391684,"_nanoseconds":433000000}}],"totalItems":41,"count":2,"page":1,"totalPages":21,"limit":2,"hasNext":true,"hasPrev":false},"metadata":{"description":"The request has succeeded.","documentation":"https://tools.ietf.org/html/rfc7231#section-6.3.1","timestamp":"2025-01-21T00:08:22.706Z","responseTime":"240ms","code":200,"status":"OK"},"links":{"self":{"rel":"self","href":"localhost:3333/api/contact?page=1&sort=createdAt&order=desc&limit=2","method":"GET"},"first":{"rel":"first","href":"localhost:3333/?page=1","method":"GET"},"last":{"rel":"last","href":"localhost:3333/?page=21","method":"GET"},"create":{"title":"POST /","rel":"create","href":"localhost:3333/api/contact/","method":"POST"},"collection":{"title":"GET /","rel":"collection","href":"localhost:3333/api/contact/","method":"GET"},"item":{"title":"GET /:id","rel":"item","href":"localhost:3333/api/contact/:id","method":"GET"},"partial-update":{"title":"PATCH /:id","rel":"partial-update","href":"localhost:3333/api/contact/:id","method":"PATCH"},"delete":{"title":"DELETE /:id","rel":"delete","href":"localhost:3333/api/contact/:id","method":"DELETE"},"documentation":{"rel":"documentation","href":"localhost:3333/docs","method":"GET","title":"API Documentation"}}}
+```
 
 `POST http://localhost:3333/api/contact`
 
@@ -464,6 +506,7 @@ validation fail
 postman: 400 Bad Request
 
 The server could not understand the request. Maybe a bad syntax?
+
 ```
 {
     "success": false,
@@ -543,13 +586,14 @@ The server could not understand the request. Maybe a bad syntax?
 }
 ```
 
-`http://localhost:3333/api/contactssssssss` 
+`http://localhost:3333/api/contactssssssss`
 
 route not found
 
 postman: 404 Not Found
 
 Requested resource could not be found. 😐
+
 ```
 {
     "success": false,
@@ -571,7 +615,7 @@ not login
 
 postman: 401 Unauthorized
 
-The request is unauthenticated. 
+The request is unauthenticated.
 
 ```
 {
@@ -723,7 +767,5 @@ By following these guidelines, you'll have a scalable and efficient RESTful API 
 
 **Happy Coding! 🧑‍💻**
 
-
 📃 License
 This project is licensed under the MIT License.
-

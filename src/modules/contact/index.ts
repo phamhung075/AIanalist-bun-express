@@ -26,7 +26,7 @@ router.use(createHATEOASMiddleware(router, {
 
 // Define routes without baseApi prefix
 router.post('/', validateCreateDTO, asyncHandler(contactController.create));
-router.get('/', validatePaginationDTO, asyncHandler(contactController.getAll));
+router.get('/', validatePaginationDTO, asyncHandler(contactController.getAll)); // pagination possible http://localhost:3333/api/contact?page=1&limit=2&sort=createdAt&order=desc
 router.get('/:id', firebaseAuthMiddleware, validateIdDTO, asyncHandler(contactController.getById));
 // router.put('/:id', firebaseAuthMiddleware,validateIdDTO, validateCreateDTO, asyncHandler(contactController.replace)); //todo
 router.patch('/:id', firebaseAuthMiddleware, validateIdDTO, validateUpdateDTO, asyncHandler(contactController.update));
