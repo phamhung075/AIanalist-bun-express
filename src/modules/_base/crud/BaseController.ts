@@ -2,12 +2,12 @@ import _ERROR from "@/_core/helper/http-status/error";
 import _SUCCESS from "@/_core/helper/http-status/success";
 import { CustomRequest } from "@/_core/helper/interfaces/CustomRequest.interface";
 
-import { PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
 import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 import { NextFunction, Response } from "express";
 import { Service } from "typedi";
 import { BaseService } from "./BaseService";
 import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
+import { PaginationOptions } from "@/_core/helper/interfaces/PaginationServer.interface";
 
 /**
  * Generic Controller Class for CRUD and Pagination Operations
