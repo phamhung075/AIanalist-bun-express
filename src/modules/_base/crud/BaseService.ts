@@ -1,8 +1,8 @@
 
 import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
-import { BaseRepository } from "./BaseRepository";
 import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
-import { PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
+import { BaseRepository } from "./BaseRepository";
+import { PaginationOptions } from "@/_core/helper/interfaces/PaginationServer.interface";
 
 /**
  * Generic Service Class for CRUD Operations

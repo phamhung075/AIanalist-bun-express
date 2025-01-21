@@ -20,8 +20,8 @@ import {
   Timestamp,
   writeBatch,
 } from "firebase/firestore";
-import { FirestorePaginator } from "../FirestorePaginator";
 import { fail } from "assert";
+import { FirestorePaginator } from "../FirestorePaginatorClientSide";
 
 interface TestDocument {
   id: string;

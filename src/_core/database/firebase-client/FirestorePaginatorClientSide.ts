@@ -1,9 +1,5 @@
-import {
-    FilterCondition,
-    OrderByOption,
-    PaginatedResult,
-    PaginationOptions,
-} from "@/_core/helper/interfaces/Pagination.interface";
+
+import { FilterCondition, OrderByOption, PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/PaginationClient.interface";
 import { WhereFilterOp } from "firebase-admin/firestore";
 import { FirebaseError } from "firebase/app";
 import {
@@ -347,23 +343,23 @@ export class FirestorePaginator<T extends { id: string }> {
   }
 }
 
-// Usage example:
-/*
-  const paginator = new FirestorePaginator<UserDocument>(
-    collection(db, 'users')
-  );
+// // Usage example:
+// /*
+//   const paginator = new FirestorePaginator<UserDocument>(
+//     collection(db, 'users')
+//   );
   
-  const result = await paginator.paginate({
-    page: 1,
-    limit: 10,
-    filters: [
-      { key: 'status', operator: '==', value: 'active' }
-    ],
-    orderBy: { field: 'createdAt', direction: 'desc' },
-    dateRange: {
-      field: 'createdAt',
-      start: new Date('2024-01-01'),
-      end: new Date()
-    }
-  });
-  */
+//   const result = await paginator.paginate({
+//     page: 1,
+//     limit: 10,
+//     filters: [
+//       { key: 'status', operator: '==', value: 'active' }
+//     ],
+//     orderBy: { field: 'createdAt', direction: 'desc' },
+//     dateRange: {
+//       field: 'createdAt',
+//       start: new Date('2024-01-01'),
+//       end: new Date()
+//     }
+//   });
+//   */

@@ -16,8 +16,8 @@ export interface PaginationResult<T> {
     limit: number;
     totalItems?: number;
     totalPages?: number;
-    hasNext?: boolean;
-    hasPrev?: boolean;
+    hasNextPage?: boolean;
+    hasPrevPage?: boolean;
 }
 
 
