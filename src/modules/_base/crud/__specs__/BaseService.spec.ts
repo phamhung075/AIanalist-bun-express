@@ -1,385 +1,252 @@
-import { FilterCondition, OrderByOption, PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/PaginationServer.interface";
-import { describe, test, expect, beforeEach } from "bun:test";
-import { DocumentSnapshot, FieldPath, OrderByDirection, Timestamp } from "firebase-admin/firestore";
+import { describe, test, expect, beforeEach, mock } from "bun:test";
 
-// Mock interfaces for testing
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
+import { PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/PaginationServer.interface";
+import { BaseRepository } from "../BaseRepository";
+import { BaseService } from "../BaseService";
+
+// Test interface
 interface TestEntity {
   id?: string;
   name: string;
-  createdAt: Date;
-  status: string;
-  age: number;
-  isDeleted?: boolean;
-}
-
-// Mock DocumentSnapshot for testing
-class MockDocumentSnapshot implements Partial<DocumentSnapshot> {
-  constructor(public snapshotData: any, public id: string) {}
-  
-  data() {
-    return this.snapshotData;
-  }
+  value: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Mock repository implementation
-class MockPaginationRepository {
-  private entities: TestEntity[] = [];
-  private lastDoc: MockDocumentSnapshot | null = null;
+class MockRepository extends BaseRepository<TestEntity> {
+  mockData: TestEntity[] = [];
 
-  constructor() {
-    // Initialize with test data
-    this.entities = [
-      { id: '1', name: 'Entity 1', createdAt: new Date('2024-01-01'), status: 'active', age: 25 },
-      { id: '2', name: 'Entity 2', createdAt: new Date('2024-01-02'), status: 'inactive', age: 30 },
-      { id: '3', name: 'Entity 3', createdAt: new Date('2024-01-03'), status: 'active', age: 35 },
-      { id: '4', name: 'Entity 4', createdAt: new Date('2024-01-04'), status: 'active', age: 40, isDeleted: true },
-      { id: '5', name: 'Entity 5', createdAt: new Date('2024-01-05'), status: 'inactive', age: 45 }
-    ];
+  async create(data: Omit<TestEntity, "id" | "createdAt" | "updatedAt">): Promise<TestEntity> {
+    const now = new Date();
+    const newItem: TestEntity = {
+      ...data,
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now
+    };
+    this.mockData.push(newItem);
+    return newItem;
   }
 
-  async paginate(options: PaginationOptions): Promise<PaginatedResult<TestEntity>> {
-    let filteredData = [...this.entities];
-    const startTime = Date.now();
+  async createWithId(id: string, data: Omit<TestEntity, "id" | "createdAt" | "updatedAt">): Promise<TestEntity> {
+    const now = new Date();
+    const newItem: TestEntity = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.mockData.push(newItem);
+    return newItem;
+  }
 
-    // Handle soft delete filtering
-    if (!options.includeSoftDeleted) {
-      filteredData = filteredData.filter(entity => !entity.isDeleted);
-    }
-
-    // Apply filters
-    if (options.filters) {
-      filteredData = this.applyFilters(filteredData, options.filters);
-    }
-
-    // Apply composite filters
-    if (options.compositeFilters) {
-      filteredData = this.applyCompositeFilters(filteredData, options.compositeFilters);
-    }
-
-    // Apply date range
-    if (options.dateRange) {
-      filteredData = this.applyDateRange(filteredData, options.dateRange);
-    }
-
-    // Apply ordering
-    if (options.orderBy) {
-      filteredData = this.applyOrdering(filteredData, options.orderBy);
-    }
-
-    // Handle pagination
-    const page = options.page || 1;
-    const limit = options.limit || 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-    // Set last visible document
-    this.lastDoc = paginatedData.length > 0 
-      ? new MockDocumentSnapshot(paginatedData[paginatedData.length - 1], paginatedData[paginatedData.length - 1].id!)
-      : null;
-
+  async getAll(pagination: PaginationInput) {
+    const startIndex = (pagination.page - 1) * pagination.limit;
+    const endIndex = startIndex + pagination.limit;
     return {
-      data: paginatedData,
-      total: filteredData.length,
-      page,
-      limit,
-      totalPages: Math.ceil(filteredData.length / limit),
-      hasNextPage: endIndex < filteredData.length,
-      hasPrevPage: page > 1,
-      lastVisible: this.lastDoc as any,
-      executionTime: Date.now() - startTime,
-      appliedFilters: {
-        filters: this.transformFiltersToRecord(options.filters),
-        dateRange: options.dateRange ? {
-          field: typeof options.dateRange.field === 'string' ? options.dateRange.field : options.dateRange.field.toString(),
-          start: options.dateRange.start,
-          end: options.dateRange.end
-        } : undefined,
-        orderBy: this.transformOrderByToRecord(options.orderBy)
-      }
+      data: this.mockData.slice(startIndex, endIndex),
+      total: this.mockData.length,
+      page: pagination.page,
+      limit: pagination.limit
     };
   }
 
-  private applyFilters(data: TestEntity[], filters: FilterCondition[]): TestEntity[] {
-    return data.filter(entity => {
-      return filters.every(filter => {
-        const value = entity[filter.key as keyof TestEntity];
-        if (value === undefined) {
-          return false; // Si la valeur est indéfinie, le filtre échoue
-        }
-        switch (filter.operator) {
-          case '==':
-            return value === filter.value;
-          case '>':
-            return value > filter.value;
-          case '>=':
-            return value >= filter.value;
-          case '<':
-            return value < filter.value;
-          case '<=':
-            return value <= filter.value;
-          case '!=':
-            return value !== filter.value;
-          default:
-            return true;
-        }
-      });
-    });
-  }
-
-  private applyCompositeFilters(data: TestEntity[], compositeFilters: { type: 'and' | 'or', conditions: FilterCondition[] }[]): TestEntity[] {
-    return data.filter(entity => {
-      return compositeFilters.every(composite => {
-        if (composite.type === 'and') {
-          return composite.conditions.every(filter => this.evaluateFilter(entity, filter));
-        } else {
-          return composite.conditions.some(filter => this.evaluateFilter(entity, filter));
-        }
-      });
-    });
-  }
-
-  private evaluateFilter(entity: TestEntity, filter: FilterCondition): boolean {
-    const value = entity[filter.key as keyof TestEntity];
-    if (value === undefined) {
-      return false; // Si la valeur est indéfinie, le filtre échoue
+  async getById(id: string): Promise<TestEntity> {
+    const item = this.mockData.find(item => item.id === id);
+    if (!item) {
+      throw new Error(`Document with ID ${id} not found`);
     }
-    switch (filter.operator) {
-      case '==':
-        return value === filter.value;
-      case '>':
-        return value > filter.value;
-      case '>=':
-        return value >= filter.value;
-      case '<':
-        return value < filter.value;
-      case '<=':
-        return value <= filter.value;
-      case '!=':
-        return value !== filter.value;
-      default:
-        return true;
-    }
+    return item;
   }
 
-  private applyDateRange(data: TestEntity[], dateRange: { field: string | FieldPath; start?: Date; end?: Date }): TestEntity[] {
-    return data.filter(entity => {
-      const value = entity[dateRange.field as keyof TestEntity] as Date;
-      if (!value) return true;
-      
-      if (dateRange.start && dateRange.end) {
-        return value >= dateRange.start && value <= dateRange.end;
-      } else if (dateRange.start) {
-        return value >= dateRange.start;
-      } else if (dateRange.end) {
-        return value <= dateRange.end;
-      }
-      return true;
-    });
-  }
-
-  private applyOrdering(data: TestEntity[], orderBy: OrderByOption | OrderByOption[]): TestEntity[] {
-    const orderByOptions = Array.isArray(orderBy) ? orderBy : [orderBy];
+  async update(id: string, updates: Partial<Omit<TestEntity, "id" | "createdAt">>): Promise<TestEntity> {
+    const index = this.mockData.findIndex(item => item.id === id);
+    if (index === -1) throw new Error(`Document with ID ${id} not found`);
     
-    return [...data].sort((a, b) => {
-      for (const option of orderByOptions) {
-        const field = option.field as keyof TestEntity;
-        const direction = option.direction || 'asc';
-        const modifier = direction === 'desc' ? -1 : 1;
-        if ((a[field] ?? 0) < (b[field] ?? 0)) return -1 * modifier;
-        if ((a[field] ?? 0) > (b[field] ?? 0)) return 1 * modifier;
-      }
-      return 0;
-    });
+    this.mockData[index] = {
+      ...this.mockData[index],
+      ...updates,
+      updatedAt: new Date()
+    };
+    return this.mockData[index];
   }
 
-  private transformFiltersToRecord(filters?: FilterCondition[]): Record<string, any> | undefined {
-    if (!filters) return undefined;
-    
-    return filters.reduce((acc, filter) => {
-      acc[filter.key as string] = filter.value;
-      return acc;
-    }, {} as Record<string, any>);
+  async delete(id: string): Promise<boolean> {
+    const index = this.mockData.findIndex(item => item.id === id);
+    if (index === -1) return false;
+    this.mockData.splice(index, 1);
+    return true;
   }
 
-  private transformOrderByToRecord(orderBy?: OrderByOption | OrderByOption[]): Record<string, OrderByDirection> | undefined {
-    if (!orderBy) return undefined;
-    
-    const options = Array.isArray(orderBy) ? orderBy : [orderBy];
-    return options.reduce((acc, option) => {
-      acc[option.field as string] = option.direction || 'asc';
-      return acc;
-    }, {} as Record<string, OrderByDirection>);
+  async paginate(options: PaginationOptions): Promise<PaginatedResult<TestEntity & { id: string }>> {
+    const startIndex = ((options.page || 1) - 1) * (options.limit || 10);
+    const endIndex = startIndex + (options.limit || 10);
+    return {
+      data: this.mockData.slice(startIndex, endIndex) as (TestEntity & { id: string })[],
+      total: this.mockData.length,
+      page: options.page || 1,
+      limit: options.limit || 10,
+      hasNextPage: endIndex < this.mockData.length,
+      hasPrevPage: (options.page || 1) > 1,
+      totalPages: Math.ceil(this.mockData.length / (options.limit || 10))
+    };
   }
 }
 
-describe('Pagination and Filtering', () => {
-  let repository: MockPaginationRepository;
+// Concrete implementation of BaseService for testing
+class TestService extends BaseService<TestEntity> {
+  constructor(repository: BaseRepository<TestEntity>) {
+    super(repository);
+  }
+}
+
+describe('BaseService', () => {
+  let service: TestService;
+  let repository: MockRepository;
+  let consoleSpy: any;
 
   beforeEach(() => {
-    repository = new MockPaginationRepository();
+    repository = new MockRepository('test-collection', { softDelete: true });
+    service = new TestService(repository);
+    consoleSpy = mock(() => console.error);
   });
 
-  describe('Basic Pagination', () => {
-    test('should paginate results correctly', async () => {
-      const options: PaginationOptions = {
-        page: 1,
-        limit: 2
-      };
-
-      const result = await repository.paginate(options);
+  describe('create', () => {
+    test('should create a new entity successfully', async () => {
+      const testData = { name: 'Test Entity', value: 123 };
+      const result = await service.create(testData);
       
-      expect(result.data.length).toBe(2);
-      expect(result.total).toBe(4); // Excluding soft deleted
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(2);
-      expect(result.hasNextPage).toBe(true);
-      expect(result.hasPrevPage).toBe(false);
+      expect(result).toBeTruthy();
+      if (result) {
+        expect(result.id).toBeDefined();
+        expect(result.name).toBe(testData.name);
+        expect(result.value).toBe(testData.value);
+        expect(result.createdAt).toBeDefined();
+        expect(result.updatedAt).toBeDefined();
+      } else {
+        throw new Error('Creation failed');
+      }
+    });
+  });
+
+  describe('createWithId', () => {
+    test('should create entity with specified ID', async () => {
+      const id = 'test-id-123';
+      const testData = { name: 'Test Entity', value: 123 };
+      
+      const result = await service.createWithId(id, testData);
+      
+      expect(result.id).toBe(id);
+      expect(result.name).toBe(testData.name);
+      expect(result.value).toBe(testData.value);
+      expect(result.createdAt).toBeDefined();
+      expect(result.updatedAt).toBeDefined();
+    });
+  });
+
+  describe('getAll', () => {
+    test('should retrieve paginated results', async () => {
+      await service.create({ name: 'Entity 1', value: 1 });
+      await service.create({ name: 'Entity 2', value: 2 });
+      
+      const pagination: PaginationInput = { page: 1, limit: 10, order: "asc" };
+      const result = await service.getAll(pagination);
+      
+      expect(result.data.length).toBeGreaterThan(0);
+      expect(result.totalItems).toBeDefined();
+      expect(result.page).toBe(pagination.page);
+      expect(result.limit).toBe(pagination.limit);
+    });
+  });
+
+  describe('getById', () => {
+    test('should retrieve entity by ID', async () => {
+      const created = await service.create({ name: 'Test Entity', value: 123 });
+      
+      const result = await service.getById(created.id!);
+      
+      expect(result).toBeTruthy();
+      expect(result?.id).toBe(created.id);
     });
 
-    test('should handle last page correctly', async () => {
-      const options: PaginationOptions = {
-        page: 2,
-        limit: 3
-      };
+    test('should handle error when getting by ID', async () => {
+      const getByIdSpy = mock(repository.getById);
+      const error = new Error('Database error');
+      getByIdSpy.mockImplementation(async () => { throw error; });
 
-      const result = await repository.paginate(options);
+      await expect(service.getById('non-existent')).rejects.toThrow();
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    test('should update entity successfully', async () => {
+      const created = await service.create({ name: 'Original', value: 100 });
+      
+      const updates = { name: 'Updated', value: 200 };
+      const result = created ? await service.update(created.id as string, updates) : null;
+      
+      expect(result).toBeTruthy();
+      expect(result?.name).toBe(updates.name);
+      expect(result?.value).toBe(updates.value);
+      if (result) {
+        if (result) {
+          if (result && 'updatedAt' in result) {
+            expect(result.updatedAt).not.toBe(created.updatedAt);
+          }
+        }
+      } else {
+        throw new Error('Update failed');
+      }
+    });
+
+    test('should handle non-existent entity update', async () => {
+      const result = await service.update('non-existent', { name: 'Updated' });
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('delete', () => {
+    test('should delete entity successfully', async () => {
+      const created = await service.create({ name: 'To Delete', value: 100 });
+      
+      const result = await service.delete(created.id!);
+      expect(result).toBe(true);
+      
+      const retrieved = await service.getById(created.id!);
+      expect(retrieved).toBeNull();
+    });
+
+    test('should handle non-existent entity deletion', async () => {
+      const result = await service.delete('non-existent');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('paginator', () => {
+    test('should paginate results successfully', async () => {
+      await service.create({ name: 'Entity 1', value: 1 });
+      await service.create({ name: 'Entity 2', value: 2 });
+      
+      const options: PaginationOptions = { page: 1, limit: 1 };
+      const result = await service.paginator(options);
       
       expect(result.data.length).toBe(1);
-      expect(result.hasNextPage).toBe(false);
-      expect(result.hasPrevPage).toBe(true);
-    });
-  });
-
-  describe('Filtering', () => {
-    test('should apply single filter correctly', async () => {
-      const options: PaginationOptions = {
-        filters: [
-          { key: 'status', operator: '==', value: 'active' }
-        ]
-      };
-
-      const result = await repository.paginate(options);
-      expect(result.data.every(item => item.status === 'active')).toBe(true);
-      expect(result.data.length).toBe(2); // Excluding soft deleted
+      expect(result.totalPages).toBe(2);
+      expect(result.page).toBe(options.page as number);
+      expect(result.limit).toBe(options.limit as number);
     });
 
-    test('should apply multiple filters with AND logic', async () => {
-      const options: PaginationOptions = {
-        filters: [
-          { key: 'status', operator: '==', value: 'active' },
-          { key: 'age', operator: '>=', value: 30 }
-        ]
-      };
+    test('should handle pagination error', async () => {
+      const originalPaginate = repository.paginate;
+      repository.paginate = async function() { throw new Error('Pagination error'); };
+      const error = new Error('Pagination error');
+      paginateSpy.mockImplementation(async () => { throw error; });
 
-      const result = await repository.paginate(options);
-      expect(result.data.every(item => 
-        item.status === 'active' && item.age >= 30
-      )).toBe(true);
-    });
-  });
-
-  describe('Composite Filters', () => {
-    test('should apply OR composite filter correctly', async () => {
-      const options: PaginationOptions = {
-        compositeFilters: [{
-          type: 'or',
-          conditions: [
-            { key: 'status', operator: '==', value: 'active' },
-            { key: 'age', operator: '>=', value: 45 }
-          ]
-        }]
-      };
-
-      const result = await repository.paginate(options);
-      expect(result.data.every(item => 
-        item.status === 'active' || item.age >= 45
-      )).toBe(true);
-    });
-  });
-
-  describe('Date Range Filtering', () => {
-    test('should filter by date range correctly', async () => {
-      const options: PaginationOptions = {
-        dateRange: {
-          field: 'createdAt',
-          start: new Date('2024-01-02'),
-          end: new Date('2024-01-04')
-        }
-      };
-
-      const result = await repository.paginate(options);
-      expect(result.data.every(item => 
-        item.createdAt >= options.dateRange!.start! &&
-        item.createdAt <= options.dateRange!.end!
-      )).toBe(true);
-    });
-  });
-
-  describe('Ordering', () => {
-    test('should order results correctly', async () => {
-      const options: PaginationOptions = {
-        orderBy: {
-          field: 'age',
-          direction: 'desc'
-        }
-      };
-
-      const result = await repository.paginate(options);
-      const ages = result.data.map(item => item.age);
-      expect(ages).toEqual([...ages].sort((a, b) => b - a));
-    });
-
-    test('should handle multiple ordering criteria', async () => {
-      const options: PaginationOptions = {
-        orderBy: [
-          { field: 'status', direction: 'asc' },
-          { field: 'age', direction: 'desc' }
-        ]
-      };
-
-      const result = await repository.paginate(options);
-      expect(result.data).toBeTruthy();
-    });
-  });
-
-  describe('Soft Delete Handling', () => {
-    test('should exclude soft deleted items by default', async () => {
-      const options: PaginationOptions = {};
-      const result = await repository.paginate(options);
-      
-      expect(result.data.some(item => item.isDeleted)).toBe(false);
-    });
-
-    test('should include soft deleted items when specified', async () => {
-      const options: PaginationOptions = {
-        includeSoftDeleted: true
-      };
-      
-      const result = await repository.paginate(options);
-      expect(result.data.some(item => item.isDeleted)).toBe(true);
-    });
-  });
-
-  describe('Response Metadata', () => {
-    test('should include execution time', async () => {
-      const result = await repository.paginate({});
-      expect(result.executionTime).toBeDefined();
-      expect(typeof result.executionTime).toBe('number');
-    });
-
-    test('should include applied filters in metadata', async () => {
-      const options: PaginationOptions = {
-        filters: [
-          { key: 'status', operator: '==', value: 'active' }
-        ],
-        orderBy: { field: 'age', direction: 'desc' }
-      };
-
-      const result = await repository.paginate(options);
-      expect(result.appliedFilters).toBeDefined();
-      expect(result.appliedFilters?.filters?.status).toBe('active');
-      expect(result.appliedFilters?.orderBy?.age).toBe('desc');
+      await expect(service.paginator({})).rejects.toThrow();
+      expect(consoleSpy).toHaveBeenCalled();
     });
   });
 });
