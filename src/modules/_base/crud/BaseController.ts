@@ -1,16 +1,13 @@
 import _ERROR from "@/_core/helper/http-status/error";
 import _SUCCESS from "@/_core/helper/http-status/success";
 import { CustomRequest } from "@/_core/helper/interfaces/CustomRequest.interface";
-import {
-  FetchPageResult,
-  PaginationOptions,
-} from "@/_core/helper/interfaces/FetchPageResult.interface";
+
+import { PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
+import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
 import { NextFunction, Response } from "express";
 import { Service } from "typedi";
 import { BaseService } from "./BaseService";
-import { PaginationInput } from "@/modules/contact/contact.dto";
-import { IContact } from "@/modules/contact/contact.interface";
-import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.schema";
 
 /**
  * Generic Controller Class for CRUD and Pagination Operations
@@ -181,7 +178,7 @@ export abstract class BaseController<
         all: all === "true",
       };
 
-      const paginationResult: FetchPageResult<T> = await this.service.paginator(
+      const paginationResult: PaginatedResult<T> = await this.service.paginator(
         options
       );
 

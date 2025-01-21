@@ -2,12 +2,9 @@ import { firestore } from "@/_core/database/firebase-admin-sdk";
 import { API_CONFIG } from "@/_core/helper/http-status/common/api-config";
 import { createPagination } from "@/_core/helper/http-status/common/create-pagination";
 import _ERROR from "@/_core/helper/http-status/error";
-import {
-  FetchPageResult,
-  PaginationOptions,
-} from "@/_core/helper/interfaces/FetchPageResult.interface";
-import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
-import { PaginationInput } from "@/modules/contact/contact.validation";
+import { PaginatedResult, PaginationOptions } from "@/_core/helper/interfaces/Pagination.interface";
+import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.schema";
+
 import { DocumentSnapshot, OrderByDirection, Query } from "firebase-admin/firestore";
 
 /**
@@ -59,7 +56,7 @@ export abstract class BaseRepository<T extends { id?: string }> {
     }
   }
 
-  async getAll(pagination: PaginationInput): Promise<FetchPageResult<T>> {
+  async getAll(pagination: PaginationInput): Promise<PaginatedResult<T>> {
     const page = pagination.page ?? API_CONFIG.PAGINATION.DEFAULT_PAGE;
     const limit = Math.min(
       pagination.limit ?? API_CONFIG.PAGINATION.DEFAULT_LIMIT,
@@ -102,20 +99,18 @@ export abstract class BaseRepository<T extends { id?: string }> {
   
       return {
         data: results,
-        totalItems: approximateCount,
-        count: results.length,
+        total: approximateCount,
         page,
         totalPages,
         limit,
-        hasNext: hasNextPage,
-        hasPrev: page > 1,
+        hasNextPage: hasNextPage,
+        hasPrevPage: page > 1,
       };
     } catch (error: any) {
       this.handleFirestoreError(
         error,
         "Échec de la récupération des documents"
       );
-      throw error;
     }
   }
   
@@ -239,7 +234,7 @@ export abstract class BaseRepository<T extends { id?: string }> {
   /**
    * ✅ Paginated Query
    */
-  async paginator(options: PaginationOptions): Promise<FetchPageResult<T>> {
+  async paginator(options: PaginationOptions): Promise<PaginatedResult<T>> {
     try {
       const {
         page = 1,
