@@ -6,7 +6,7 @@ import { BaseRepository } from "../BaseRepository";
 import { Response, NextFunction } from "express";
 import { CustomRequest } from "@/_core/helper/interfaces/CustomRequest.interface";
 import _ERROR from "@/_core/helper/http-status/error";
-import { PaginatedResult } from "@/_core/helper/interfaces/Pagination.interface";
+import { PaginatedResult } from "@/_core/helper/interfaces/PaginationServer.interface";
 
 // Test interfaces
 interface TestEntity {
