@@ -19,6 +19,7 @@ interface TestDocument {
   email: string;
   status?: string;
   role?: string;
+  age?: number;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -29,13 +30,19 @@ class TestRepository extends BaseRepository<TestDocument> {
     super("test_collection", { softDelete });
   }
 
-  // Add method to expose document snapshot for testing
   async getDocumentSnapshot(id: string): Promise<DocumentSnapshot> {
     return await this.collection.doc(id).get();
   }
+
+  // Helper method for cleanup
+  async deleteAllDocuments() {
+    const snapshot = await this.collection.get();
+    const deletePromises = snapshot.docs.map(doc => this.collection.doc(doc.id).delete());
+    await Promise.all(deletePromises);
+  }
 }
 
-describe("ServerRepository", () => {
+describe("BaseRepository", () => {
   let repository: TestRepository;
   let app: any;
 
@@ -63,17 +70,11 @@ describe("ServerRepository", () => {
 
   beforeEach(async () => {
     repository = new TestRepository();
-    // Clean up existing documents before each test
-    const result = await repository.paginate({ page: 1, limit: 100 });
-    await Promise.all(
-      (result.data || []).map((doc: { id: string }) =>
-        repository.delete(doc.id)
-      )
-    );
+    await repository.deleteAllDocuments();
   });
 
-  describe("CRUD Operations", () => {
-    test("should create a document", async () => {
+  describe("Document Creation", () => {
+    test("should create a document with auto-generated ID", async () => {
       const testData = {
         name: faker.person.fullName(),
         email: faker.internet.email(),
@@ -91,6 +92,36 @@ describe("ServerRepository", () => {
       expect(created.deletedAt).toBeNull();
     });
 
+    test("should create a document with specified ID", async () => {
+      const customId = faker.string.uuid();
+      const testData = {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      };
+
+      const created = await repository.createWithId(customId, testData);
+
+      expect(created.id).toBe(customId);
+      expect(created.name).toBe(testData.name);
+      expect(created.email).toBe(testData.email);
+    });
+
+    test("should throw error when creating document with existing ID", async () => {
+      const customId = faker.string.uuid();
+      const testData = {
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      };
+
+      await repository.createWithId(customId, testData);
+
+      await expect(
+        repository.createWithId(customId, testData)
+      ).rejects.toThrow(/existe déjà/);
+    });
+  });
+
+  describe("Document Retrieval", () => {
     test("should retrieve a document by ID", async () => {
       const testData = {
         name: faker.person.fullName(),
@@ -103,6 +134,58 @@ describe("ServerRepository", () => {
       expect(retrieved).toEqual(created);
     });
 
+    test("should throw error when retrieving non-existent document", async () => {
+      const nonExistentId = faker.string.uuid();
+
+      await expect(repository.getById(nonExistentId)).rejects.toThrow(
+        /Document with ID .* not found/
+      );
+    });
+
+    test("should retrieve all documents with pagination", async () => {
+      // Create exactly three test documents
+      const testDocs = [
+        {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        },
+        {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        },
+        {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        },
+      ];
+
+      // Create documents and store their IDs
+      const createdDocs = await Promise.all(
+        testDocs.map(doc => repository.create(doc))
+      );
+
+      // Verify we have exactly 3 documents
+      const countSnapshot = await (repository as any).collection.get();
+      expect(countSnapshot.size).toBe(3);
+
+      // Test pagination
+      const result = await repository.getAll({ page: 1, limit: 2, order: "asc" });
+
+      // Verify pagination results
+      expect(result.data.length).toBe(2); // First page should have 2 items
+      expect(result.totalItems).toBe(3); // Total should be 3
+      expect(result.hasNextPage).toBe(true); // Should have next page
+      expect(result.hasPrevPage).toBe(false); // Should not have previous page
+      
+      // Verify second page
+      const secondPage = await repository.getAll({ page: 2, limit: 2, order: "asc" });
+      expect(secondPage.data.length).toBe(1); // Second page should have 1 item
+      expect(secondPage.hasNextPage).toBe(false); // Should not have next page
+      expect(secondPage.hasPrevPage).toBe(true); // Should have previous page
+    });
+  });
+
+  describe("Document Updates", () => {
     test("should update a document", async () => {
       const original = await repository.create({
         name: faker.person.fullName(),
@@ -134,44 +217,8 @@ describe("ServerRepository", () => {
         })
       ).rejects.toThrow(/Document with ID .* not found/);
     });
-  });
 
-  describe("Soft Delete", () => {
-    test("should soft delete a document by default", async () => {
-      const doc = await repository.create({
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-      });
-
-      await repository.delete(doc.id!);
-
-      // Should throw when trying to get soft-deleted document
-      await expect(repository.getById(doc.id!)).rejects.toThrow(
-        /Document with ID .* has been deleted/
-      );
-
-      // Verify document still exists with deletedAt timestamp
-      const snapshot = await repository.getDocumentSnapshot(doc.id!);
-      const data = snapshot.data();
-      expect(data?.deletedAt).toBeDefined();
-      expect(data?.deletedAt.toDate()).toBeInstanceOf(Date);
-    });
-
-    test("should hard delete when softDelete is disabled", async () => {
-      const hardDeleteRepo = new TestRepository(false);
-      const doc = await hardDeleteRepo.create({
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-      });
-
-      await hardDeleteRepo.delete(doc.id!);
-
-      // Verify document no longer exists
-      const snapshot = await hardDeleteRepo.getDocumentSnapshot(doc.id!);
-      expect(snapshot.exists).toBe(false);
-    });
-
-    test("should prevent updates to soft-deleted documents", async () => {
+    test("should throw error when updating soft-deleted document", async () => {
       const doc = await repository.create({
         name: faker.person.fullName(),
         email: faker.internet.email(),
@@ -187,9 +234,72 @@ describe("ServerRepository", () => {
     });
   });
 
-  describe("Pagination", () => {
+  describe("Document Deletion", () => {
+    test("should soft delete a document by default", async () => {
+      const doc = await repository.create({
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      });
+
+      const result = await repository.delete(doc.id!);
+      expect(result).toBe(true);
+
+      await expect(repository.getById(doc.id!)).rejects.toThrow(
+        /Document with ID .* has been deleted/
+      );
+
+      const snapshot = await repository.getDocumentSnapshot(doc.id!);
+      const data = snapshot.data();
+      expect(data?.deletedAt).toBeDefined();
+      expect(data?.deletedAt.toDate()).toBeInstanceOf(Date);
+    });
+
+    test("should hard delete when softDelete is disabled", async () => {
+      const hardDeleteRepo = new TestRepository(false);
+      const doc = await hardDeleteRepo.create({
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+      });
+
+      const result = await hardDeleteRepo.delete(doc.id!);
+      expect(result).toBe(true);
+
+      const snapshot = await hardDeleteRepo.getDocumentSnapshot(doc.id!);
+      expect(snapshot.exists).toBe(false);
+    });
+
+    test("should throw error when deleting non-existent document", async () => {
+      const nonExistentId = faker.string.uuid();
+
+      await expect(repository.delete(nonExistentId)).rejects.toThrow(
+        /Document avec l'ID .* non trouvé/
+      );
+    });
+  });
+
+  describe("Pagination and Filtering", () => {
+    test("should paginate results with basic options", async () => {
+      await Promise.all(
+        Array(5).fill(null).map(() =>
+          repository.create({
+            name: faker.person.fullName(),
+            email: faker.internet.email(),
+          })
+        )
+      );
+
+      const result = await repository.paginate({
+        page: 1,
+        limit: 3,
+      });
+
+      expect(result.data.length).toBe(3);
+      expect(result.total).toBeGreaterThan(0);
+      expect(result.page).toBe(1);
+      expect(result.hasNextPage).toBe(true);
+    });
+
     test("should apply filters in pagination", async () => {
-      // Create test documents with specific status
       await Promise.all([
         repository.create({
           name: faker.person.fullName(),
@@ -210,19 +320,93 @@ describe("ServerRepository", () => {
           role: "user",
         }),
       ]);
-  
+
       const options: PaginationOptions = {
         page: 1,
         limit: 10,
         filters: [{ key: "status", operator: "==", value: "active" }],
-        includeSoftDeleted: false
+        includeSoftDeleted: false,
       };
-  
+
       const result = await repository.paginate(options);
-  
+
       expect(result.data.length).toBe(2);
-      expect(result.total).toBe(2); // Now this should pass as we're only counting active documents
-      expect(result.data.every((doc: any) => doc.status === "active")).toBe(true);
+      expect(result.total).toBe(2);
+      expect(result.data.every((doc) => doc.status === "active")).toBe(true);
+    });
+
+    test("should apply composite filters", async () => {
+      await Promise.all([
+        repository.create({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          status: "active",
+          role: "admin",
+          age: 30,
+        }),
+        repository.create({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          status: "active",
+          role: "user",
+          age: 25,
+        }),
+        repository.create({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          status: "inactive",
+          role: "admin",
+          age: 35,
+        }),
+      ]);
+
+      const options: PaginationOptions = {
+        page: 1,
+        limit: 10,
+        compositeFilters: [{
+          type: "and",
+          conditions: [
+            { key: "status", operator: "==", value: "active" },
+            { key: "role", operator: "==", value: "admin" },
+          ],
+        }],
+      };
+
+      const result = await repository.paginate(options);
+
+      expect(result.data.length).toBe(1);
+      expect(result.data[0].status).toBe("active");
+      expect(result.data[0].role).toBe("admin");
+    });
+
+    test("should handle date range filters", async () => {
+      const now = new Date();
+      const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
+
+      await Promise.all([
+        repository.create({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        }),
+        repository.create({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        }),
+      ]);
+
+      const options: PaginationOptions = {
+        page: 1,
+        limit: 10,
+        dateRange: {
+          field: "createdAt",
+          start: new Date(now.getTime() - 12 * 60 * 60 * 1000), // 12 hours ago
+          end: new Date(),
+        },
+      };
+
+      const result = await repository.paginate(options);
+
+      expect(result.data.length).toBe(2);
     });
   });
 });
