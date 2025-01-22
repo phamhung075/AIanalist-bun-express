@@ -119,8 +119,6 @@ export default router;
 
 ### 4. **Controllers**
 
-- Handle incoming requests.
-
 **Example:**
 
 ```typescript
