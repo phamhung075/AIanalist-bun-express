@@ -149,7 +149,7 @@ if (!token) {
   }).send(res, next);
 }
 
-//example error throw
+//example error throw on function, service or repository
 if (!token) {
   return new _ERROR.UnauthorizedError({
     message: "Unauthorized: No token provided",
