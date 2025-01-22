@@ -152,14 +152,14 @@ bun test --coverage
 --------------------------------------------------------------------------------|---------|---------|-------------------
 File                                                                            | % Funcs | % Lines | Uncovered Line #s
 --------------------------------------------------------------------------------|---------|---------|-------------------
-All files                                                                       |   86.36 |   92.54 |
+All files                                                                       |   86.68 |   93.17 |
  src\_core\auth\__specs__\auth.controller.spec.ts                               |   92.31 |   93.02 | 48-49,54-55,77
- src\_core\auth\__specs__\auth.repository.spec.ts                               |   93.75 |   96.35 | 64,68,71-72
+ src\_core\auth\__specs__\auth.repository.spec.ts                               |  100.00 |   98.40 | 35,68
  src\_core\auth\__specs__\auth.service.spec.ts                                  |  100.00 |  100.00 | 
  src\_core\auth\auth.controller.ts                                              |   20.00 |    9.90 | 17-24,29-69,74-91,95-118
  src\_core\auth\auth.dto.ts                                                     |  100.00 |  100.00 | 
  src\_core\auth\auth.module.ts                                                  |  100.00 |  100.00 | 
- src\_core\auth\auth.repository.ts                                              |   62.50 |   36.42 | 95-204
+ src\_core\auth\auth.repository.ts                                              |   75.00 |   72.22 | 160-204
  src\_core\auth\auth.service.ts                                                 |  100.00 |  100.00 | 
  src\_core\auth\auth.validation.ts                                              |  100.00 |  100.00 | 
  src\_core\auth\index.ts                                                        |    0.00 |   81.48 | 20-24
@@ -214,5 +214,10 @@ All files                                                                       
  src\modules\contact\index.ts                                                   |    0.00 |   81.48 | 19-23
  src\modules\index.ts                                                           |  100.00 |  100.00 | 
 --------------------------------------------------------------------------------|---------|---------|-------------------
+
+ 138 pass
+ 0 fail
+ 467 expect() calls
+Ran 138 tests across 17 files. [19.53s]
 ```
 
