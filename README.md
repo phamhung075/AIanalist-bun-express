@@ -832,8 +832,6 @@ The request is unauthenticated.
 ```
 
 ```
-
-Directory structure:
 Directory structure:
 ├── src/
 │   ├── _core/
