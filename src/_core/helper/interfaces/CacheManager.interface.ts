@@ -1,4 +1,4 @@
-import { PaginationOptions, PaginatedResult } from "./Pagination.interface";
+import { PaginationOptions, PaginatedResult } from "./PaginationServer.interface";
 
 /**
  * Cache manager interface
