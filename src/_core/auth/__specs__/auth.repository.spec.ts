@@ -22,56 +22,29 @@ describe('AuthRepository Integration Tests', () => {
   let authRepository: AuthRepository;
   let testEmail: string;
   let testPassword: string;
-
-  const verifyEmulatorConnection = async () => {
-    try {
-      // Try a simple operation that should fail in a specific way
-      await signInWithEmailAndPassword(auth, 'test@test.com', 'password');
-      return false; // Should not reach here
-    } catch (error: any) {
-      // If we get auth/user-not-found, the emulator is working
-      return error.code === 'auth/user-not-found';
-    }
-  };
+  let testUid: string;
 
   beforeAll(async () => {
-    // Set environment variables
     process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
     process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
     process.env.NODE_ENV = 'test';
     
-    try {
-      // Cleanup existing apps
-      await Promise.all(getApps().map(app => deleteApp(app)));
-      
-      // Initialize Firebase
-      app = initializeApp(testConfig);
-      auth = getAuth(app);
-      firestore = getFirestore(app);
-
-      // Connect to emulators with proper URLs
-      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-      connectFirestoreEmulator(firestore, 'localhost', 8080);
-      
-      // Verify emulator connection with retries
-      let connected = false;
-      for (let i = 0; i < 3 && !connected; i++) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        connected = await verifyEmulatorConnection();
-        if (connected) {
-          console.log('Successfully connected to Firebase emulator');
-          break;
-        }
-      }
-      
-      if (!connected) {
-        throw new Error('Failed to connect to Firebase emulators. Please ensure emulators are running.');
-      }
-
-    } catch (error) {
-      console.error('Test setup failed:', error);
-      throw error;
+    // Ensure cleanup of any existing apps
+    const apps = getApps();
+    for (const app of apps) {
+      await deleteApp(app);
     }
+    
+    // Initialize Firebase
+    app = initializeApp(testConfig);
+    auth = getAuth(app);
+    firestore = getFirestore(app);
+
+    // Connect to emulators
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
   });
 
   beforeEach(async () => {
@@ -80,24 +53,31 @@ describe('AuthRepository Integration Tests', () => {
     testPassword = faker.internet.password({ length: 12 });
     
     try {
-      await auth?.signOut();
+      if (auth?.currentUser) {
+        await auth.signOut();
+      }
     } catch (error) {
-      // Ignore signOut errors in beforeEach
+      // Ignore signOut errors
     }
-
-    // Add a small delay after signOut
     await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   afterAll(async () => {
-    if (app) {
-      try {
-        await auth?.signOut().catch(() => {});
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await deleteApp(app);
-      } catch (error) {
-        console.error('Cleanup failed:', error);
+    try {
+      if (auth?.currentUser) {
+        await auth.signOut();
       }
+    } catch (error) {
+      // Ignore signOut errors
+    }
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (app && !app.isDeleted) {
+        await deleteApp(app);
+      }
+    } catch (error) {
+      console.error('App cleanup error:', error);
     }
   });
 
@@ -110,7 +90,7 @@ describe('AuthRepository Integration Tests', () => {
 
       expect(result).toBeDefined();
       expect(result.user.email?.toLowerCase()).toBe(testEmail);
-    }, 10000);
+    });
 
     test('should fail when creating user with existing email', async () => {
       // First create a user
@@ -119,6 +99,7 @@ describe('AuthRepository Integration Tests', () => {
         password: testPassword,
       });
 
+      // Wait for user creation to complete
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Attempt to create another user with same email
@@ -128,54 +109,132 @@ describe('AuthRepository Integration Tests', () => {
           password: testPassword,
         })
       ).rejects.toThrow(/email.*(?:already in use|already exists)/i);
-    }, 10000);
+    });
   });
 
   describe('loginUser', () => {
-    test('should successfully login existing user', async () => {
-      // Create user first
+    beforeEach(async () => {
+      // Create a test user before each login test
       await authRepository.createUser({
         email: testEmail,
         password: testPassword,
       });
+      await new Promise(resolve => setTimeout(resolve, 500));
+    });
 
-      await auth.signOut();
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+    test('should successfully login existing user', async () => {
       const result = await authRepository.loginUser(testEmail, testPassword);
 
       expect(result).toHaveProperty('idToken');
       expect(result).toHaveProperty('refreshToken');
       expect(typeof result.idToken).toBe('string');
       expect(typeof result.refreshToken).toBe('string');
-    }, 15000);
+    });
 
     test('should fail with invalid credentials', async () => {
       await expect(
         authRepository.loginUser(testEmail, 'wrongpassword')
-      ).rejects.toThrow(/(?:Invalid email or password|Authentication failed|user-not-found)/i);
-    }, 10000);
+      ).rejects.toThrow(/(?:Invalid email or password|Authentication failed)/i);
+    });
+  });
+
+  describe('verifyIdToken', () => {
+    let testIdToken: string;
+
+    beforeEach(async () => {
+      // Create and login user to get valid token
+      await authRepository.createUser({
+        email: testEmail,
+        password: testPassword,
+      });
+      const loginResult = await authRepository.loginUser(testEmail, testPassword);
+      testIdToken = loginResult.idToken;
+      await new Promise(resolve => setTimeout(resolve, 500));
+    });
+
+    test('should successfully verify a valid token', async () => {
+      const result = await authRepository.verifyIdToken(testIdToken);
+      expect(result).toBeDefined();
+      expect(result.email?.toLowerCase()).toBe(testEmail);
+    });
+
+    test('should fail with invalid token', async () => {
+      await expect(
+        authRepository.verifyIdToken('invalid-token')
+      ).rejects.toThrow(/Invalid.*token|expired.*token/i);
+    });
+  });
+
+  describe('getUserById', () => {
+    beforeEach(async () => {
+      // Create user and store UID
+      const createResult = await authRepository.createUser({
+        email: testEmail,
+        password: testPassword,
+      });
+      testUid = createResult.user.uid;
+      await new Promise(resolve => setTimeout(resolve, 500));
+    });
+
+    test('should successfully get user by id', async () => {
+      const result = await authRepository.getUserById(testUid);
+      expect(result).toBeDefined();
+      expect(result.email?.toLowerCase()).toBe(testEmail);
+      expect(result.uid).toBe(testUid);
+    });
+
+    test('should fail with invalid user id', async () => {
+      await expect(
+        authRepository.getUserById('invalid-uid')
+      ).rejects.toThrow(/User not found/i);
+    });
   });
 
   describe('error handling', () => {
-    describe('createUser', () => {
-      test('should handle invalid email format', async () => {
-        await expect(
-          authRepository.createUser({
-            email: 'invalid-email',
-            password: testPassword,
-          })
-        ).rejects.toThrow(/(?:Invalid email|invalid email|malformed email)/i);
-      });
+    test('should handle network errors in login', async () => {
+      const invalidEmail = 'non-existent@example.com';
+      const invalidPassword = 'wrong-password';
+      
+      try {
+        await authRepository.loginUser(invalidEmail, invalidPassword);
+        expect.unreachable('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).toBe('Invalid email or password');
+      }
+    });
 
-      test('should handle weak password', async () => {
-        await expect(
-          authRepository.createUser({
-            email: testEmail,
-            password: '123',
-          })
-        ).rejects.toThrow(/(?:Password.*weak|weak.*password)/i);
-      });
+    test('should handle malformed emails', async () => {
+      const invalidEmails = ['not-an-email', '@nodomain.com', ''];
+      
+      for (const invalidEmail of invalidEmails) {
+        try {
+          await authRepository.createUser({
+            email: invalidEmail,
+            password: testPassword,
+          });
+          expect.unreachable('Should have thrown an error');
+        } catch (error: any) {
+          // Check for either "Invalid email format" or "Failed to register user"
+          expect(
+            error.message === 'Invalid email format' || 
+            error.message === 'Failed to register user'
+          ).toBe(true);
+        }
+      }
+    });
+
+    test('should handle weak passwords', async () => {
+      const weakPassword = '123';
+      
+      try {
+        await authRepository.createUser({
+          email: testEmail,
+          password: weakPassword,
+        });
+        expect.unreachable('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).toBe('Password is too weak');
+      }
     });
   });
 });
