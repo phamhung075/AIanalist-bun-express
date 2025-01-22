@@ -161,51 +161,142 @@ if (!token) {
 
 - Validate data using `validateSchema(CreateContactSchema)`.
 
-### 5. **Services**
 
-- Encapsulate business logic (e.g., `contact.service.ts`).
+
+### 5. **Controllers Modules**
 
 **Example:**
 
 ```typescript
-import { firestore } from "@/core/database/firebase";
+import { Service } from 'typedi';
+import { BaseController } from '../_base/crud/BaseController';
+import type { CreateInput, UpdateInput } from './contact.dto';
+import type { IContact } from './contact.interface';
+import type ContactService from './contact.service';
+import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
 
-export class ContactService {
-  async getContactById(contactId: string) {
-    try {
-      const contactRef = firestore.collection("contacts").doc(contactId);
-      const doc = await contactRef.get();
-      if (!doc.exists) {
-        throw new Error("Contact not found");
-      }
-      return doc.data();
-    } catch (error) {
-      console.error("Failed to fetch contact:", error);
-      throw error;
-    }
-  }
 
-  async createContact(contactData: any) {
-    try {
-      const contactRef = await firestore
-        .collection("contacts")
-        .add(contactData);
-      return { id: contactRef.id, ...contactData };
-    } catch (error) {
-      console.error("Failed to create contact:", error);
-      throw error;
+@Service()
+@BindMethods()
+class ContactController extends BaseController<IContact, CreateInput, UpdateInput> {
+    constructor(
+        protected readonly contactService: ContactService  // Change to protected and add @Inject()
+    ) {
+        super(contactService);
     }
-  }
+    //CRUD methods is inherited from BaseController
+
+    //other methods
 }
+
+export default ContactController;
 ```
 
-### 6. **Repositories**
+### 6. **Services Modules**
+
+**Example:**
+
+```typescript
+// contact.service.ts
+
+import { Service } from 'typedi';
+import { BaseService } from "../_base/crud/BaseService";
+import type { IContact } from "./contact.interface";
+import type ContactRepository from "./contact.repository";
+
+
+@Service()
+class ContactService extends BaseService<IContact> {
+    constructor(
+        protected readonly repository: ContactRepository
+    ) {
+        super(repository);
+    }
+    
+    //CRUD methods is inherited from BaseController
+
+
+    //other methods
+}
+
+export default ContactService;
+```
+
+### 7. **Repositories Modules**
 
 - Abstract data access logic (e.g., `contact.repository.ts`).
 
-### 7. **Validation**
+
+```typescript
+// contact.repository.ts
+import { Service } from 'typedi';
+import { BaseRepository } from '../_base/crud/BaseRepository';
+import type { IContact } from './contact.interface';
+
+@Service()
+class ContactRepository extends BaseRepository<IContact> {
+    constructor() {
+        super('contacts');
+    }
+    //CRUD methods is inherited from BaseController
+
+    //other methods
+}
+
+export default ContactRepository;
+```
+
+### 8. **Validation**
 
 - Employ **Zod** for schema-based input validation.
+
+### 9. **Modules Configuration Example**
+
+```typescript
+// src/modules/contact/contact.module.ts
+import { Container } from 'typedi';
+import ContactController from './contact.controller';
+import ContactRepository from './contact.repository';
+import ContactService from './contact.service';
+
+
+class ContactModule {
+    private static instance: ContactModule;
+    public contactController: ContactController;
+    public contactService: ContactService;
+    public contactRepository: ContactRepository;
+
+    private constructor() {
+        // First create repository
+        this.contactRepository = new ContactRepository();
+        Container.set('ContactRepository', this.contactRepository);
+
+        // Then create service with repository
+        this.contactService = new ContactService(this.contactRepository);
+        Container.set('ContactService', this.contactService);
+
+        // Finally create controller with service
+        this.contactController = new ContactController(this.contactService);
+        Container.set('ContactController', this.contactController);
+    }
+
+    public static getInstance(): ContactModule {
+        if (!ContactModule.instance) {
+            ContactModule.instance = new ContactModule();
+        }
+        return ContactModule.instance;
+    }
+}
+
+const contactModule = ContactModule.getInstance();
+export const { contactController, contactService, contactRepository } = contactModule;
+
+```
+
+## 10. **Inter Modules Communication**
+
+  The Auth module calls the Contact module to create a contact during registration
+
 
 ## 🔗 **HATEOAS Details**
 
