@@ -183,7 +183,6 @@ export class BaseRepository<T extends BaseDocument> {
     }
   }
 
-  // Utiliser le FirestorePaginator pour la pagination
   async paginate(options: PaginationOptions) {
     const paginationOptions = {
       ...options,
@@ -219,39 +218,3 @@ export class BaseRepository<T extends BaseDocument> {
     return new Error(message);
   }
 }
-
-// Exemple d'utilisation :
-/*
-interface UserDocument extends BaseDocument {
-  name: string;
-  email: string;
-  status: string;
-}
-
-const userRepository = new ServerRepository<UserDocument>('users', { softDelete: true });
-
-// CRUD de base
-const user = await userRepository.create({ name: 'John', email: 'john@example.com' });
-
-// Pagination avancée avec toutes les fonctionnalités
-const result = await userRepository.paginate({
-  page: 1,
-  limit: 10,
-  filters: [
-    { key: 'status', operator: '==', value: 'active' }
-  ],
-  compositeFilters: [{
-    type: 'and',
-    conditions: [
-      { key: 'role', operator: 'in', value: ['admin', 'moderator'] }
-    ]
-  }],
-  dateRange: {
-    field: 'createdAt',
-    start: new Date('2024-01-01'),
-    end: new Date()
-  },
-  orderBy: { field: 'createdAt', direction: 'desc' },
-  select: ['id', 'name', 'email', 'status']
-});
-*/

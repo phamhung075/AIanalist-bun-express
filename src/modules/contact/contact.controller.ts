@@ -10,7 +10,7 @@ import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
 @BindMethods()
 class ContactController extends BaseController<IContact, CreateInput, UpdateInput> {
     constructor(
-        protected readonly contactService: ContactService  // Change to protected and add @Inject()
+        protected readonly contactService: ContactService
     ) {
         super(contactService);
     }

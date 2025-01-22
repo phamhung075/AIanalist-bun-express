@@ -45,10 +45,7 @@ export abstract class BaseService<T extends { id?: string }> {
 
   async paginator(options: PaginationOptions): Promise<PaginationResult<T>> {
     try {
-      const result = await this.repository.paginate(options) as PaginationResult<T>;
-
-      // Ensure the result matches FetchPageResult interface structure
-      return result;
+      return await this.repository.paginate(options) as PaginationResult<T>;
     } catch (error) {
       console.error("Error in paginator:", error);
       throw error;
