@@ -854,9 +854,14 @@ Directory structure:
 │   │   │   ├── dotenv.config.ts
 │   │   │   └── firebase-admin.account.ts
 │   │   ├── database/
-│   │   │   └── firebase-admin-sdk/
-│   │   │       ├── firebase-test-config.ts
-│   │   │       └── index.ts
+│   │   │   ├── firebase-admin-sdk/
+│   │   │   │   ├── firebase-test-config.ts
+│   │   │   │   ├── FirestorePaginatorServerSide.ts
+│   │   │   │   └── index.ts
+│   │   │   └── firebase-client/
+│   │   │       ├── __specs__/
+│   │   │       │   └── FirestorePaginator.spec.ts
+│   │   │       └── FirestorePaginatorClientSide.ts
 │   │   ├── decorators/
 │   │   │   └── bind-methods.decorator.ts
 │   │   ├── helper/
@@ -884,13 +889,17 @@ Directory structure:
 │   │   │   │   │   └── index.ts
 │   │   │   │   └── response-log.ts
 │   │   │   ├── interfaces/
+│   │   │   │   ├── CacheManager.interface.ts
 │   │   │   │   ├── CustomRequest.interface.ts
-│   │   │   │   ├── FetchPageResult.interface.ts
+│   │   │   │   ├── PaginationClient.interface.ts
+│   │   │   │   ├── PaginationServer.interface.ts
 │   │   │   │   └── rest.interface.ts
 │   │   │   └── validateZodSchema/
 │   │   │       ├── __tests__/
 │   │   │       │   └── validateSchema.spec.ts
-│   │   │       └── index.ts
+│   │   │       ├── index.ts
+│   │   │       ├── Pagination.validation.ts
+│   │   │       └── Pagnination.dto.ts
 │   │   ├── logger/
 │   │   │   ├── __tests__/
 │   │   │   │   └── simple-logger.spec.ts
