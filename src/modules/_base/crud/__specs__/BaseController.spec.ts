@@ -42,22 +42,36 @@ class MockService extends BaseService<TestEntity> {
     super(repository);
   }
 
-  override create = async (
-    data: Omit<TestEntity, "id">
-  ): Promise<TestEntity | false> => {
+  override create = async (data: Omit<TestEntity, "id">): Promise<TestEntity | false> => {
     return false;
   };
 
-  override update = async (
-    id: string,
-    data: Partial<TestEntity>
-  ): Promise<TestEntity | null> => {
+  override createWithId = async (id: string, data: Omit<TestEntity, "id">): Promise<TestEntity> => {
+    throw new Error("Not implemented");
+  };
+
+  override update = async (id: string, data: Partial<TestEntity>): Promise<TestEntity | null> => {
     return null;
   };
 
-  override getAll = async (
-    pagination: any
-  ): Promise<PaginatedResult<TestEntity>> => {
+  override getAll = async (pagination: any): Promise<PaginatedResult<TestEntity>> => {
+    return {
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+      executionTime: 0,
+    };
+  };
+
+  override getById = async (id: string): Promise<TestEntity | null> => {
+    return null;
+  };
+
+  override paginator = async (options: any): Promise<PaginatedResult<TestEntity>> => {
     return {
       data: [],
       total: 0,
@@ -78,6 +92,7 @@ class TestController extends BaseController<TestEntity, CreateDTO, UpdateDTO> {
   }
 }
 
+
 describe("BaseController", () => {
   let controller: TestController;
   let service: MockService;
@@ -90,7 +105,6 @@ describe("BaseController", () => {
     controller = new TestController(service);
     sentResponse = null;
 
-    // Mock response object
     mockRes = {
       status: mock((code: number) => {
         mockRes.statusCode = code;
@@ -100,7 +114,7 @@ describe("BaseController", () => {
         sentResponse = { ...data, status: mockRes.statusCode };
         return mockRes;
       }),
-      _status: 200,
+      statusCode: 200,
     } as any;
 
     mockNext = mock(() => {});
@@ -125,9 +139,7 @@ describe("BaseController", () => {
         deletedAt: null,
       };
 
-      service.create = mock(
-        async (): Promise<TestEntity | false> => expectedEntity
-      );
+      service.create = mock(async (): Promise<TestEntity | false> => expectedEntity);
 
       await controller.create(mockRequest, mockRes as Response, mockNext);
 
@@ -152,6 +164,20 @@ describe("BaseController", () => {
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(_ERROR.BadRequestError));
     });
+
+    test("should handle service error during creation", async () => {
+      const mockRequest = {
+        body: {} as CreateDTO,
+      } as CustomRequest<CreateDTO>;
+
+      service.create = mock(async () => {
+        throw new Error("Service error");
+      });
+
+      await controller.create(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
   });
 
   describe("getAll", () => {
@@ -166,13 +192,11 @@ describe("BaseController", () => {
       } as unknown as CustomRequest;
 
       const mockResults: PaginatedResult<TestEntity> = {
-        data: Array(10)
-          .fill(null)
-          .map(() => ({
-            id: faker.string.uuid(),
-            name: faker.commerce.productName(),
-            description: faker.commerce.productDescription(),
-          })),
+        data: Array(10).fill(null).map(() => ({
+          id: faker.string.uuid(),
+          name: faker.commerce.productName(),
+          description: faker.commerce.productDescription(),
+        })),
         total: 20,
         page: 1,
         limit: 10,
@@ -182,11 +206,7 @@ describe("BaseController", () => {
         executionTime: 100,
       };
 
-      service.getAll = mock(
-        async (): Promise<PaginatedResult<TestEntity>> => mockResults
-      );
-
-      await controller.getAll(mockRequest, mockRes as Response, mockNext);
+      service.getAll = mock(async (): Promise<PaginatedResult<TestEntity>> => mockResults);
 
       await controller.getAll(mockRequest, mockRes as Response, mockNext);
 
@@ -203,6 +223,104 @@ describe("BaseController", () => {
         message: "Fetched entities successfully",
         pagination: mockResults,
       });
+    });
+
+    test("should handle getAll with default pagination values", async () => {
+      const mockRequest = {
+        query: {},
+      } as unknown as CustomRequest;
+
+      const mockResults: PaginatedResult<TestEntity> = {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        executionTime: 0,
+      };
+
+      service.getAll = mock(async (): Promise<PaginatedResult<TestEntity>> => mockResults);
+
+      await controller.getAll(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched entities successfully",
+        pagination: mockResults,
+      });
+    });
+
+    test("should handle service error in getAll", async () => {
+      const mockRequest = {
+        query: {},
+      } as unknown as CustomRequest;
+
+      service.getAll = mock(async () => {
+        throw new Error("Service error");
+      });
+
+      await controller.getAll(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  describe("getById", () => {
+    test("should successfully get entity by ID", async () => {
+      const testId = faker.string.uuid();
+      const mockRequest = {
+        params: { id: testId },
+      } as unknown as CustomRequest;
+
+      const expectedEntity: TestEntity = {
+        id: testId,
+        name: faker.commerce.productName(),
+        description: faker.commerce.productDescription(),
+        updatedAt: new Date(),
+      };
+
+      service.getById = mock(async (): Promise<TestEntity | null> => expectedEntity);
+
+      await controller.getById(mockRequest, mockRes as Response, mockNext);
+
+      expect(service.getById).toHaveBeenCalledWith(testId);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched entity by ID successfully",
+        data: expectedEntity,
+      });
+    });
+
+    test("should handle non-existent entity in getById", async () => {
+      const mockRequest = {
+        params: { id: faker.string.uuid() },
+      } as unknown as CustomRequest;
+
+      service.getById = mock(async (): Promise<TestEntity | null> => null);
+
+      await controller.getById(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(_ERROR.NotFoundError));
+    });
+
+    test("should handle service error in getById", async () => {
+      const mockRequest = {
+        params: { id: faker.string.uuid() },
+      } as unknown as CustomRequest;
+
+      service.getById = mock(async () => {
+        throw new Error("Service error");
+      });
+
+      await controller.getById(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
     });
   });
 
@@ -225,9 +343,7 @@ describe("BaseController", () => {
         updatedAt: new Date(),
       };
 
-      service.update = mock(
-        async (): Promise<TestEntity | null> => updatedEntity
-      );
+      service.update = mock(async (): Promise<TestEntity | null> => updatedEntity);
 
       await controller.update(mockRequest, mockRes as Response, mockNext);
 
@@ -253,6 +369,21 @@ describe("BaseController", () => {
       await controller.update(mockRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(_ERROR.NotFoundError));
+    });
+
+    test("should handle service error during update", async () => {
+      const mockRequest = {
+        params: { id: faker.string.uuid() },
+        body: { name: "New Name" },
+      } as unknown as CustomRequest<UpdateDTO>;
+
+      service.update = mock(async () => {
+        throw new Error("Service error");
+      });
+
+      await controller.update(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
     });
   });
 
@@ -286,6 +417,208 @@ describe("BaseController", () => {
       await controller.delete(mockRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(_ERROR.NotFoundError));
+    });
+
+    test("should handle service error during deletion", async () => {
+      const mockRequest = {
+        params: { id: faker.string.uuid() },
+      } as unknown as CustomRequest;
+
+      service.delete = mock(async () => {
+        throw new Error("Service error");
+      });
+
+      await controller.delete(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  describe("paginator", () => {
+    test("should return paginated results successfully", async () => {
+      const mockRequest = {
+        query: {
+          page: "2",
+          limit: "5",
+          all: "false"
+        },
+      } as unknown as CustomRequest;
+
+      const mockResults: PaginatedResult<TestEntity> = {
+        data: Array(5).fill(null).map(() => ({
+          id: faker.string.uuid(),
+          name: faker.commerce.productName(),
+          description: faker.commerce.productDescription(),
+        })),
+        total: 15,
+        page: 2,
+        limit: 5,
+        totalPages: 3,
+        hasNextPage: true,
+        hasPrevPage: true,
+        executionTime: 100,
+      };
+
+      service.paginator = mock(async (): Promise<PaginatedResult<TestEntity>> => mockResults);
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      expect(service.paginator).toHaveBeenCalledWith({
+        page: 2,
+        limit: 5,
+        all: false,
+      });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched paginated entities successfully",
+        pagination: mockResults,
+      });
+    });
+
+    test("should handle invalid pagination parameters", async () => {
+      const mockRequest = {
+        query: {
+          page: "invalid",
+          limit: "invalid",
+        },
+      } as unknown as CustomRequest;
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(_ERROR.BadRequestError));
+    });
+
+    test("should use default pagination values", async () => {
+      const mockRequest = {
+        query: {},
+      } as unknown as CustomRequest;
+
+      const mockResults: PaginatedResult<TestEntity> = {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+        executionTime: 0,
+      };
+
+      service.paginator = mock(async (): Promise<PaginatedResult<TestEntity>> => mockResults);
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      expect(service.paginator).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        all: false,
+      });
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched paginated entities successfully",
+        pagination: mockResults,
+      });
+    });
+
+    test("should handle service error in paginator", async () => {
+      const mockRequest = {
+        query: {
+          page: "1",
+          limit: "10",
+        },
+      } as unknown as CustomRequest;
+
+      service.paginator = mock(async () => {
+        throw new Error("Pagination error");
+      });
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+    });
+
+    test("should handle all=true parameter", async () => {
+      const mockRequest = {
+        query: {
+          page: "1",
+          limit: "10",
+          all: "true",
+        },
+      } as unknown as CustomRequest;
+
+      const mockResults: PaginatedResult<TestEntity> = {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        executionTime: 0,
+      };
+
+      service.paginator = mock(async (): Promise<PaginatedResult<TestEntity>> => mockResults);
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched paginated entities successfully",
+        pagination: mockResults,
+      });
+    });
+  });
+
+  
+  describe("Error Handling", () => {
+    test("should handle undefined request query", async () => {
+      const mockRequest = {
+        query: {} // BaseController expects req.query to exist, even if empty
+      } as CustomRequest;
+
+      const mockResults: PaginatedResult<TestEntity> = {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        executionTime: 0
+      };
+
+      // Create the mock function with proper typing
+      const paginatorMock = mock(async (options: any): Promise<PaginatedResult<TestEntity>> => mockResults);
+      
+      // Assign the mock to the service
+      service.paginator = paginatorMock;
+
+      await controller.paginator(mockRequest, mockRes as Response, mockNext);
+
+      // Verify the mock was called once
+      expect(paginatorMock).toHaveBeenCalledTimes(1);
+
+      // Verify it was called with the correct parameters
+      expect(paginatorMock).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        all: false
+      });
+
+      // Verify response
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(sentResponse).toMatchObject({
+        success: true,
+        status: 200,
+        message: "Fetched paginated entities successfully",
+        pagination: mockResults
+      });
     });
   });
 });
