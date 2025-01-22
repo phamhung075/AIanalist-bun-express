@@ -1,12 +1,11 @@
 import { firebaseAuthMiddleware } from '@middleware/auth.middleware';
-import type { NextFunction, Request, Response } from 'express';
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
+const router: Router = Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const router = Router();
 
 // Fonction helper pour charger les routes de manière dynamique
 const loadRoute = async (path: string) => {
@@ -14,22 +13,23 @@ const loadRoute = async (path: string) => {
     return module.default;
 };
 
-// Route de base
-router.post('/', (_req: Request, res: Response, _next: NextFunction) => {
-    return res.status(200).json({
+const welcomeHandler: RequestHandler = (req, res, next) => {
+    res.status(200).json({
         message: 'Welcome to AIAnalyst!'
     });
-});
+};
 
-router.get('/health', (_req: Request, res: Response, _next: NextFunction) => {
-    return res.status(200).json({
+const healthCheck: RequestHandler = (req, res, next) => {
+    res.status(200).json({
         status: 'ok'
     });
-});
+};
 
 
-// Initialisation des routes de manière asynchrone
 const initRoutes = async () => {
+    router.post('/', welcomeHandler);
+    router.get('/health', healthCheck);
+
     // Auth routes
     const authRoutePath = resolve(__dirname, "../_core/auth/index.ts");
     console.log ("loading auth route from :", authRoutePath);
@@ -41,6 +41,12 @@ const initRoutes = async () => {
     const contactRouter = await loadRoute(contactRoutePath);
     console.log ("loading contact route from :", contactRouter);
     router.use('/api/contact', firebaseAuthMiddleware, contactRouter);
+
+    // Load AI routes
+    const aiRoutePath = resolve(__dirname, "./ai/index.ts");    
+    const aiRouter = await loadRoute(aiRoutePath);
+    console.log("loading AI route from:", aiRoutePath);
+    router.use('/api/ai', firebaseAuthMiddleware, aiRouter);
 
     // const tradingRoutePath = resolve(__dirname, "./trading-economics-new/index.ts");    
     // const tradingRouter = await loadRoute(tradingRoutePath);

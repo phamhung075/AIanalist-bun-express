@@ -12,6 +12,8 @@
     "build:clean": "bun run clean && bun run build"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.33",
+    "@langchain/openai": "^0.3.17",
     "@types/cors": "^2.8.17",
     "@types/lodash": "^4.17.14",
     "@types/supertest": "^6.0.2",
@@ -23,6 +25,7 @@
     "firebase": "^11.2.0",
     "firebase-admin": "^13.0.2",
     "helmet": "^8.0.0",
+    "langchain": "^0.3.12",
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.2.2",
     "typedi": "^0.10.0",
