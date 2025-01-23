@@ -4,6 +4,7 @@ import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagninat
 import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
 import { validateAIRequestDTO } from './ai.dto';
 import { aiController } from './ai.module';
+import { validateContentLength } from '@/_core/middleware/validateContentLength.middleware';
 
 const router = createRouter(__filename);
 
