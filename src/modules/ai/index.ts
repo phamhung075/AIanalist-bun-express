@@ -25,6 +25,7 @@ router.use(createHATEOASMiddleware(router, {
 // AI Routes
 router.post('/generate', validateAIRequestDTO, asyncHandler(aiController.generateResponse));
 router.get('/', validatePaginationDTO, asyncHandler(aiController.getAll));
-router.get('/:id', validatePaginationDTO, asyncHandler(aiController.getById));
+router.get('/:id', asyncHandler(aiController.getById));
+router.get('/chat/:chatId/history', asyncHandler(aiController.getChatHistory));
 
 export default router;

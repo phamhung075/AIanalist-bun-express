@@ -1,10 +1,16 @@
-export interface IAIRequest {
+export interface IBaseInterface {
   id?: string;
-  prompt: string;
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
   createdAt?: Date;
   updatedAt?: Date;
-  response?: string;
 }
+
+export interface IAIRequest extends IBaseInterface {
+  prompt: string;
+  response: string;
+  chatId: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface IAIRequestCreate extends Omit<IAIRequest, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface IAIRequestUpdate extends Partial<IAIRequestCreate> {}
