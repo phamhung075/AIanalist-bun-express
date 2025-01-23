@@ -73,23 +73,23 @@ class AIService extends BaseService<IAIRequest> {
         }
     }
 
-    async processRequest(
-        data: IAIRequestCreate
-    ): Promise<IAIRequest> {
+    async processRequest(data: IAIRequestCreate): Promise<IAIRequest> {
         try {
+            const finalChatId = data.chatId || crypto.randomUUID();
+            
             const response = await this.generateResponse(
                 data.prompt,
-                data.chatId,
+                finalChatId,  // Pass the same ID
                 data.temperature,
                 data.maxTokens
             );
-
+    
             const record = await this.create({
                 ...data,
                 response,
-                chatId: data.chatId || crypto.randomUUID()
+                chatId: finalChatId  // Use the same ID
             });
-
+    
             return record as IAIRequest;
         } catch (error) {
             console.error('Error processing AI request:', error);
