@@ -8,6 +8,9 @@
 - **TypeScript:** Strong typing and better development experience.
 - **express-route-tracker:** Route management with HATEOAS support.
 - **Firebase:** Database and authentication.
+- **Pinecone:** Vector database for AI chat history.
+- **OpenAI:** AI chat service.
+- **Langchain:** AI chat framework.
 - **Validation:** Zod.
 
 ## 📖 **Key RESTful API Design Principles**
