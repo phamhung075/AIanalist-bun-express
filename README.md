@@ -1,4 +1,4 @@
-# Monolith Modular RESTful API HATEOAS Implementation Guide with Bun, Express.js, and TypeScript
+# Monolith Modular RESTful API HATEOAS Implementation Guide with Bun, Express.js, Langchain TypeScript, 
 
 (on progress)
 
