@@ -50,6 +50,7 @@ DATABASE_URI=https://server-default-rtdb.europe-west1.firebasedatabase.app
 TEST_VAR=loaded
 BASE_API=/api
 IP_FRONTEND=192.168.0.1
+LOG_DIR="logs"
 
 #Firebase Config
 FIREBASE_API_KEY=AIzaSyCkjEl-xxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -60,6 +61,9 @@ FIREBASE_MESSAGING_SENDER_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
 FIREBASE_APP_ID=1:xxxxxxxxxxxxxxxxxxxxxxxxxx:web:xxxxxxxxxxxxxxxxxxxxxxxxxx
 FIREBASE_MEASUREMENT_ID=G-xxxxxxxxxxxxxxxxxxxxxxxxxx
 
+#pinecone
+PINECONE_API_KEY=pcsk_xxxxxxxxxxxxxxxxxxxxxxxxxx
+PINECONE_REGION=us-east-xxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### 1. **Router Creation**
