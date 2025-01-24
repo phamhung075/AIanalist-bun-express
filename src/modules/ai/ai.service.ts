@@ -20,7 +20,6 @@ class AIService extends BaseService<IAIRequest> {
             openAIApiKey: process.env.OPENAI_API_KEY,
             temperature: 0.7,
         });
-        this.pineconeService = new PineconeService();
     }
 
     async generateResponse(
