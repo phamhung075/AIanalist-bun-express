@@ -34,4 +34,4 @@ class AIModule {
 }
 
 const aiModule = AIModule.getInstance();
-export const { aiController, aiService, aiRepository } = aiModule;
+export const { aiController, aiService, aiRepository, pineConeService } = aiModule;
