@@ -1,32 +1,33 @@
-import { config } from '@/_core/config/dotenv.config';
-import { asyncHandler } from '@/_core/helper/asyncHandler/index';
-import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
-import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
-import { validateAIRequestDTO } from './ai.dto';
-import { aiController } from './ai.module';
-import { validateContentLength } from '@/_core/middleware/validateContentLength.middleware';
+import { Container } from 'typedi';
+import AIController from './ai.controller';
+import AIRepository from './ai.repository';
+import AIService from './ai.service';
+import { pineconeService, PineconeService } from './vector-store/pinecone';
 
-const router = createRouter(__filename);
+class AIModule {
+	private static instance: AIModule;
+	public aiController: AIController;
+	public aiService: AIService;
+	public aiRepository: AIRepository;
 
-router.use(createHATEOASMiddleware(router, {
-    autoIncludeSameRoute: true,
-    baseUrl: config.baseUrl,
-    includePagination: true,
-    customLinks: {
-        documentation: (_req) => ({
-            rel: 'documentation',
-            href: config.baseUrl+'/docs',
-            method: 'GET',
-            'title': 'API Documentation'
-        })
-    }
-}));
+	private constructor() {
+		this.aiRepository = new AIRepository();
+		Container.set('AIRepository', this.aiRepository);
 
+		this.aiService = new AIService(this.aiRepository, pineconeService);
+		Container.set('AIService', this.aiService);
 
-// AI Routes
-router.post('/generate', validateAIRequestDTO, asyncHandler(aiController.generateResponse));
-router.get('/', validatePaginationDTO, asyncHandler(aiController.getAll));
-router.get('/:id', asyncHandler(aiController.getById));
-router.get('/chat/:chatId/history', asyncHandler(aiController.getChatHistory));
+		this.aiController = new AIController(this.aiService);
+		Container.set('AIController', this.aiController);
+	}
 
-export default router;
+	public static getInstance(): AIModule {
+		if (!AIModule.instance) {
+			AIModule.instance = new AIModule();
+		}
+		return AIModule.instance;
+	}
+}
+
+const aiModule = AIModule.getInstance();
+export const { aiController, aiService, aiRepository } = aiModule;

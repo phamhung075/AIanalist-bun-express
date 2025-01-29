@@ -1,39 +1,38 @@
-import { createHATEOASMiddleware, createRouter } from "express-route-tracker";
-import { config } from "../config/dotenv.config";
-import { asyncHandler } from "../helper/asyncHandler";
-import { firebaseAuthMiddleware } from "../middleware/auth.middleware";
-import { authController } from "./auth.module";
-import { validateRegisterDTO, validateLoginDTO } from "./auth.dto";
+import AuthRepository from './auth.repository';
+import AuthService from './auth.service';
+import AuthController from './auth.controller';
+import { Container } from 'typedi';
+import { contactService } from '@/modules/contact';
 
+class AuthModule {
+	private static instance: AuthModule;
 
-// import { config } from '../config/dotenv.config';
-require("express-route-tracker")
+	public authRepository: AuthRepository;
+	public authService: AuthService;
+	public authController: AuthController;
 
+	private constructor() {
+		// Initialize repository
+		this.authRepository = new AuthRepository();
+		Container.set('AuthRepository', this.authRepository);
 
-const router = createRouter(__filename);
+		// Initialize service with dependencies
+		this.authService = new AuthService(this.authRepository, contactService);
+		Container.set('AuthService', this.authService);
 
-router.use(createHATEOASMiddleware(router, {
-  autoIncludeSameRoute: true,
-  baseUrl: config.baseUrl,
-  includePagination: true,
-  customLinks: {
-      documentation: (_req) => ({
-          rel: 'documentation',
-          href: config.baseUrl+'/docs',
-          method: 'GET',
-          'title': 'API Documentation'
-      })
-  }
-}));
+		// Initialize controller
+		this.authController = new AuthController(this.authService);
+		Container.set('AuthController', this.authController);
+	}
 
-/**
- * 🔐 User Registration
- */
-router.post('/registre',  validateRegisterDTO, asyncHandler(authController.register));
-router.post('/login', validateLoginDTO, asyncHandler(authController.login));
-router.get('/current', firebaseAuthMiddleware, asyncHandler(authController.getCurrentUser));
-router.get('/verify', firebaseAuthMiddleware, asyncHandler(authController.getCurrentUser));
-router.get('/refreshtoken', firebaseAuthMiddleware, asyncHandler(authController.refreshToken));
+	public static getInstance(): AuthModule {
+		if (!AuthModule.instance) {
+			AuthModule.instance = new AuthModule();
+		}
+		return AuthModule.instance;
+	}
+}
 
+const authModule = AuthModule.getInstance();
 
-export default router;
+export const { authController, authService, authRepository } = authModule;
