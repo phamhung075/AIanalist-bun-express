@@ -19,3 +19,4 @@ export { contactService, contactController, contactRepository };
 export { default as ContactController } from './contact.controller';
 export { default as ContactRepository } from './contact.repository';
 export { default as ContactService } from './contact.service';
+export type { Contact, IContact } from './contact.interface';

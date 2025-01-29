@@ -5,7 +5,7 @@ import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
 import { IRegister } from './auth.interface';
 import AuthRepository from './auth.repository';
-import { ContactService } from '@/modules/contact';
+import { Contact, ContactService } from '@/modules/contact';
 
 @Service()
 @BindMethods()
@@ -20,10 +20,10 @@ export class AuthService {
 
 		const userCred = await this.authRepository.createUser({ email, password });
 
-		await this.contactService.createWithId(userCred.user.uid, {
+		(await this.contactService.createWithId(userCred.user.uid, {
 			...contactData,
 			email,
-		});
+		})) as Contact;
 
 		return userCred;
 	}

@@ -21,3 +21,5 @@ export { authService, authController, authRepository };
 export { default as AuthController } from './auth.controller';
 export { default as AuthRepository } from './auth.repository';
 export { default as AuthService } from './auth.service';
+
+export type { AuthTokens, IAuth, IRegister } from './auth.interface';

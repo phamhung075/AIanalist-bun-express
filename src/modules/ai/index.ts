@@ -24,3 +24,5 @@ export { default as AIController } from './ai.controller';
 export { default as AIRepository } from './ai.repository';
 export { default as AIService } from './ai.service';
 export { default as PineconeService } from './vector-store/pinecone';
+
+export type { AIRequest, IAIRequest, IAIRequestCreate } from './ai.interface';
