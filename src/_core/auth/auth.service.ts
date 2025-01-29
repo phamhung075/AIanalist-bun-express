@@ -1,11 +1,11 @@
-import ContactService from '@/modules/contact/contact.service';
 import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { UserCredential } from 'firebase/auth';
-import { Inject, Service } from 'typedi';
+import { Service } from 'typedi';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
 import { IRegister } from './auth.interface';
 import AuthRepository from './auth.repository';
+import { ContactService } from '@/modules/contact';
 
 @Service()
 @BindMethods()
