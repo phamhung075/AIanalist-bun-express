@@ -5,7 +5,6 @@ import ContactRepository from './contact.repository';
 
 @Service()
 class ContactService extends BaseService<Contact> {
-	contactRepository?: ContactRepository;
 	constructor(private readonly repository: ContactRepository) {
 		super(Contact);
 	}
