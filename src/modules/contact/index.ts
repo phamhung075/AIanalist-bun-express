@@ -3,16 +3,19 @@ import ContactController from './contact.controller';
 import ContactRepository from './contact.repository';
 import ContactService from './contact.service';
 
-Container.set(ContactRepository, new ContactRepository());
-Container.set(
-	ContactService,
-	new ContactService(Container.get(ContactRepository))
-);
-Container.set(
-	ContactController,
-	new ContactController(Container.get(ContactService))
-);
+// Créer des instances avec une injection de dépendance appropriée
+const contactRepository = new ContactRepository();
+Container.set(ContactRepository, contactRepository);
 
-export const contactService = Container.get(ContactService);
-export const contactController = Container.get(ContactController);
-export const contactRepository = Container.get(ContactRepository);
+const contactService = new ContactService(contactRepository);
+Container.set(ContactService, contactService);
+
+const contactController = new ContactController(contactService);
+Container.set(ContactController, contactController);
+
+// Exporter les instances
+export { contactService, contactController, contactRepository };
+// Also export the types/classes for type usage
+export { default as ContactController } from './contact.controller';
+export { default as ContactRepository } from './contact.repository';
+export { default as ContactService } from './contact.service';
