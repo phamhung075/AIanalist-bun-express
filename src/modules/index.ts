@@ -1,3 +1,4 @@
+import { API_CONFIG } from '@/_core/helper/http-status/common/api-config';
 import { firebaseAuthMiddleware } from '@middleware/auth.middleware';
 import { RequestHandler, Router } from 'express';
 import { dirname, resolve } from 'path';
@@ -33,19 +34,23 @@ const initRoutes = async () => {
 	const authRoutePath = resolve(__dirname, '../_core/auth/route.ts');
 	// console.log ("loading auth route from :", authRoutePath);
 	const authRouter = await loadRoute(authRoutePath);
-	router.use('/api/auth', authRouter);
+	router.use(API_CONFIG.PREFIX + '/auth', authRouter);
 
 	// Protected routes
 	const contactRoutePath = resolve(__dirname, './contact/route.ts');
 	const contactRouter = await loadRoute(contactRoutePath);
 	// console.log ("loading contact route from :", contactRouter);
-	router.use('/api/contact', firebaseAuthMiddleware, contactRouter);
+	router.use(
+		API_CONFIG.PREFIX + '/contact',
+		firebaseAuthMiddleware,
+		contactRouter
+	);
 
 	// Load AI routes
 	const aiRoutePath = resolve(__dirname, './ai/route.ts');
 	const aiRouter = await loadRoute(aiRoutePath);
 	// console.log("loading AI route from:", aiRoutePath);
-	router.use('/api/ai', firebaseAuthMiddleware, aiRouter);
+	router.use(API_CONFIG.PREFIX + '/ai', firebaseAuthMiddleware, aiRouter);
 
 	// const tradingRoutePath = resolve(__dirname, "./trading-economics-new/index.ts");
 	// const tradingRouter = await loadRoute(tradingRoutePath);
