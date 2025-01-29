@@ -1,5 +1,5 @@
 import type { RequestHandler, Response } from 'express';
-import { Inject, Service } from 'typedi';
+import { Service } from 'typedi';
 import { config } from '../config/dotenv.config';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
