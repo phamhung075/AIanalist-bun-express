@@ -2,7 +2,6 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 import Container, { Service } from 'typedi';
-import { BaseRepository } from '../_base/crud/BaseRepository';
 import { BaseService } from '../_base/crud/BaseService';
 import { AIRequest, IAIRequest } from './ai.interface';
 import { AIRepository } from './ai.repository';

@@ -1,4 +1,3 @@
-// contact.interface.ts
 export class Contact implements Partial<IContact> {
 	id?: string;
 	firstName?: string;

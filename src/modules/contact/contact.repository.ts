@@ -1,4 +1,3 @@
-// contact.repository.ts
 import { Service } from 'typedi';
 import { BaseRepository } from '../_base/crud/BaseRepository';
 import type { Contact } from './contact.interface';

@@ -1,20 +1,16 @@
 import {
 	createUserWithEmailAndPassword,
+	getAuth as getClientAuth,
 	signInWithEmailAndPassword,
 	type UserCredential,
-	getAuth as getClientAuth, // Renamed for clarity
 } from 'firebase/auth';
 
-import {
-	getAuth as getAdminAuth, // If needed
-	UserRecord,
-	type DecodedIdToken,
-} from 'firebase-admin/auth';
+import { UserRecord, type DecodedIdToken } from 'firebase-admin/auth';
 
+import { Service } from 'typedi';
 import { firebaseAdminAuth } from '../database/firebase-admin-sdk/index';
 import _ERROR from '../helper/http-status/error/index';
 import type { IAuth } from './auth.interface';
-import Container, { Service } from 'typedi';
 
 @Service()
 export class AuthRepository {

@@ -1,4 +1,3 @@
-// src/modules/contact/contact.module.ts
 import { Container } from 'typedi';
 import { ContactController } from './contact.controller';
 import { ContactRepository } from './contact.repository';

@@ -5,7 +5,6 @@ import { firebaseAuthMiddleware } from '../middleware/auth.middleware';
 import { validateRegisterDTO, validateLoginDTO } from './auth.dto';
 import { authController } from '.';
 
-// import { config } from '../config/dotenv.config';
 require('express-route-tracker');
 
 const router = createRouter(__filename);

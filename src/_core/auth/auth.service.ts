@@ -1,5 +1,3 @@
-// src/_core/auth/services/auth.service.ts
-
 import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { UserCredential } from 'firebase/auth';
 import _ERROR from '../helper/http-status/error';

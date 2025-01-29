@@ -1,13 +1,12 @@
+import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
+import _ERROR from '@/_core/helper/http-status/error';
+import _SUCCESS from '@/_core/helper/http-status/success';
+import type { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface';
+import type { NextFunction, Response } from 'express';
 import Container, { Service } from 'typedi';
 import { BaseController } from '../_base/crud/BaseController';
-import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
-import type { Response, NextFunction } from 'express';
-import type { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface';
-import _SUCCESS from '@/_core/helper/http-status/success';
-import _ERROR from '@/_core/helper/http-status/error';
-import { BaseService } from '../_base/crud/BaseService';
-import { AIService } from './ai.service';
 import { AIRequest, IAIRequestCreate } from './ai.interface';
+import { AIService } from './ai.service';
 
 @Service()
 @BindMethods()
