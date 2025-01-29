@@ -4,17 +4,16 @@ import AuthService from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { contactService } from '@/modules/contact';
 
-Container.set(AuthRepository, new AuthRepository());
-Container.set(
-	AuthService,
-	new AuthService(Container.get(AuthRepository), contactService)
-);
-Container.set(AuthController, new AuthController(Container.get(AuthService)));
+@Service()
+class AuthModule {
+	constructor(
+		public authService: AuthService,
+		public authController: AuthController,
+		public authRepository: AuthRepository
+	) {}
+}
 
-export const authModule = {
-	authRepository: Container.get(AuthRepository),
-	authService: Container.get(AuthService),
-	authController: Container.get(AuthController),
-};
-
-export const { authRepository, authService, authController } = authModule;
+export const authModule = Container.get(AuthModule);
+export const authService = Container.get(AuthService);
+export const authController = Container.get(AuthController);
+export const authRepository = Container.get(AuthRepository);

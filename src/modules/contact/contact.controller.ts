@@ -8,7 +8,7 @@ import { ContactService } from './contact.service';
 @Service()
 @BindMethods()
 export class ContactController extends BaseController<Contact> {
-	constructor(private readonly contactService: ContactService) {
+	constructor() {
 		super(Contact);
 	}
 

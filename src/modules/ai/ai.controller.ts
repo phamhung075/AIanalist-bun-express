@@ -12,7 +12,7 @@ import { AIRequest, IAIRequestCreate } from './ai.interface';
 @Service()
 @BindMethods()
 export class AIController extends BaseController<AIRequest> {
-	constructor(private readonly aiService: AIService) {
+	constructor() {
 		super(AIRequest);
 	}
 

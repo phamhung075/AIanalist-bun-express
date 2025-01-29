@@ -5,18 +5,15 @@ import { CustomRequest } from '../helper/interfaces/CustomRequest.interface';
 import { getTokenCookies } from '../middleware/auth.middleware';
 import { IRegister, IAuth } from './auth.interface';
 import { config } from '../config/dotenv.config';
-import { Service } from 'typedi';
+import Container, { Service } from 'typedi';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import AuthService from './auth.service';
 
 @Service()
 @BindMethods()
 class AuthController {
-	constructor(private readonly authService: AuthService) {
-		if (!authService) {
-			throw new Error('AuthService is required');
-		}
-	}
+	private authService = Container.get(AuthService);
+	constructor() {}
 
 	register: RequestHandler = async (
 		req: CustomRequest<IRegister>,
