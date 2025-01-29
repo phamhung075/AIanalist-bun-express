@@ -7,12 +7,8 @@ import ContactService from './contact.service';
 @Service()
 @BindMethods()
 class ContactController extends BaseController<Contact> {
-	constructor(private readonly contactService: ContactService) {
-		super(Contact);
-	}
-
-	baseService(): ContactService {
-		return this.contactService;
+	constructor(readonly contactService: ContactService) {
+		super(contactService);
 	}
 }
 

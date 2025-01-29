@@ -11,8 +11,8 @@ import { Contact, ContactService } from '@/modules/contact';
 @BindMethods()
 export class AuthService {
 	constructor(
-		private readonly authRepository: AuthRepository,
-		private readonly contactService: ContactService
+		readonly authRepository: AuthRepository,
+		readonly contactService: ContactService
 	) {}
 
 	async register(registerData: IRegister): Promise<UserCredential> {

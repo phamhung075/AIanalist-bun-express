@@ -11,12 +11,8 @@ import AIService from './ai.service';
 @Service()
 @BindMethods()
 class AIController extends BaseController<AIRequest> {
-	constructor(private readonly aiService: AIService) {
-		super(AIRequest);
-	}
-
-	baseService(): AIService {
-		return this.aiService;
+	constructor(readonly aiService: AIService) {
+		super(aiService);
 	}
 
 	async generateResponse(

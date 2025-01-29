@@ -1,7 +1,6 @@
 import _ERROR from '@/_core/helper/http-status/error';
 import _SUCCESS from '@/_core/helper/http-status/success';
 import { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface';
-
 import { PaginationResult } from '@/_core/helper/interfaces/rest.interface';
 import { NextFunction, Response } from 'express';
 import { Service } from 'typedi';
@@ -10,31 +9,31 @@ import { PaginationInput } from '@/_core/helper/validateZodSchema/Pagination.val
 import { PaginationOptions } from '@/_core/helper/interfaces/PaginationServer.interface';
 
 /**
- * Generic Controller Class for CRUD and Pagination Operations
+ * Generic Controller Class for CRUD Operations
  */
 @Service()
-export abstract class BaseController<T extends { [key: string]: any }> {
-	abstract baseService(): BaseService<T>;
+export abstract class BaseController<
+	T extends { [key: string]: any },
+	CreateDTO = T,
+	UpdateDTO = Partial<T>
+> {
+	constructor(protected service: BaseService<T>) {}
 
-	constructor(private classConstructor: new (...args: any[]) => T) {}
-
-	protected getClassName() {
-		return this.classConstructor.name;
-	}
-
-	async create(req: CustomRequest<T>, res: Response, _next: NextFunction) {
+	async create(
+		req: CustomRequest<CreateDTO>,
+		res: Response,
+		_next: NextFunction
+	) {
 		try {
-			const inputData: T = req.body;
-
-			const entity = await this.baseService().create(
-				inputData as Omit<T, 'id'>
-			);
+			const inputData = req.body;
+			const entity = await this.service.create(inputData as Omit<T, 'id'>);
 
 			if (!entity) {
 				throw new _ERROR.BadRequestError({
 					message: 'Creation failed',
 				});
 			}
+
 			return new _SUCCESS.CreatedSuccess({
 				message: 'Entity created successfully',
 				data: entity,
@@ -44,9 +43,6 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 		}
 	}
 
-	/**
-	 * ✅ Get all entities
-	 */
 	async getAll(req: CustomRequest, res: Response, _next: NextFunction) {
 		try {
 			const pagination: PaginationInput = {
@@ -56,12 +52,7 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 				order: (req.query.order as 'asc' | 'desc') || 'desc',
 			};
 
-			console.log('Pagination Input:', pagination); // Debug log
-
-			const results = (await this.baseService().getAll(
-				pagination
-			)) as PaginationResult<T>;
-			console.log('results ------------>', results);
+			const results = await this.service.getAll(pagination);
 
 			return new _SUCCESS.OkSuccess({
 				message: 'Fetched entities successfully',
@@ -72,14 +63,10 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 		}
 	}
 
-	/**
-	 * ✅ Get entity by ID
-	 */
 	async getById(req: CustomRequest, res: Response, _next: NextFunction) {
-		console.log('getById --->');
 		try {
 			const { id } = req.params;
-			const entity = await this.baseService().getById(id);
+			const entity = await this.service.getById(id);
 
 			if (!entity) {
 				throw new _ERROR.NotFoundError({
@@ -96,15 +83,16 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 		}
 	}
 
-	/**
-	 * ✅ Update an entity by ID
-	 */
-	async update(req: CustomRequest<T>, res: Response, _next: NextFunction) {
+	async update(
+		req: CustomRequest<UpdateDTO>,
+		res: Response,
+		_next: NextFunction
+	) {
 		try {
 			const { id } = req.params;
-			const inputData: T = req.body;
+			const inputData = req.body;
 
-			const entity = await this.baseService().update(
+			const entity = await this.service.update(
 				id,
 				inputData as unknown as Partial<T>
 			);
@@ -117,20 +105,17 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 
 			return new _SUCCESS.OkSuccess({
 				message: 'Entity updated successfully',
-				data: entity as T,
+				data: entity,
 			}).send(res, _next);
 		} catch (error) {
 			_next(error);
 		}
 	}
 
-	/**
-	 * ✅ Delete an entity by ID
-	 */
 	async delete(req: CustomRequest, res: Response, _next: NextFunction) {
 		try {
 			const { id } = req.params;
-			const result = await this.baseService().delete(id);
+			const result = await this.service.delete(id);
 
 			if (!result) {
 				throw new _ERROR.NotFoundError({
@@ -146,9 +131,6 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 		}
 	}
 
-	/**
-	 * ✅ Paginated Query
-	 */
 	async paginator(req: CustomRequest, res: Response, _next: NextFunction) {
 		try {
 			const { page = '1', limit = '10', all = 'false' } = req.query;
@@ -168,8 +150,7 @@ export abstract class BaseController<T extends { [key: string]: any }> {
 				all: all === 'true',
 			};
 
-			const paginationResult: PaginationResult<T> =
-				(await this.baseService().paginator(options)) as PaginationResult<T>;
+			const paginationResult = await this.service.paginator(options);
 
 			return new _SUCCESS.OkSuccess({
 				message: 'Fetched paginated entities successfully',

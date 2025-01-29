@@ -12,22 +12,14 @@ class AIService extends BaseService<AIRequest> {
 	private model: ChatOpenAI;
 
 	constructor(
-		protected readonly repository: AIRepository,
-		protected readonly pineconeService: PineconeService
+		readonly repository: AIRepository,
+		readonly pineconeService: PineconeService
 	) {
-		super(AIRequest);
+		super(repository);
 		this.model = new ChatOpenAI({
 			openAIApiKey: process.env.OPENAI_API_KEY,
 			temperature: 0.7,
 		});
-	}
-
-	baseRepository(): AIRepository {
-		return this.repository;
-	}
-
-	vectorRepository(): PineconeService {
-		return this.pineconeService;
 	}
 
 	async generateResponse(

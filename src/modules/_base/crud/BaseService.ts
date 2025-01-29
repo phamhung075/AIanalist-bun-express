@@ -7,29 +7,23 @@ import { PaginationOptions } from '@/_core/helper/interfaces/PaginationServer.in
  * Generic Service Class for CRUD Operations
  */
 export abstract class BaseService<T extends { [key: string]: any }> {
-	abstract baseRepository(): BaseRepository<T>;
-
-	constructor(private classConstructor: new (...args: any[]) => T) {}
-
-	protected getClassName(): string {
-		return this.classConstructor.name;
-	}
+	constructor(protected repository: BaseRepository<T>) {}
 
 	async create(data: Omit<Partial<T>, 'id'>): Promise<T | false> {
-		return await this.baseRepository().create(data as T);
+		return await this.repository.create(data as T);
 	}
 
 	async createWithId(id: string, data: Omit<Partial<T>, 'id'>): Promise<T> {
-		return await this.baseRepository().createWithId(id, data as T);
+		return await this.repository.createWithId(id, data as T);
 	}
 
 	async getAll(pagination: PaginationInput): Promise<PaginationResult<T>> {
-		return await this.baseRepository().getAll(pagination);
+		return await this.repository.getAll(pagination);
 	}
 
 	async getById(id: string): Promise<T | null> {
 		try {
-			return await this.baseRepository().getById(id);
+			return await this.repository.getById(id);
 		} catch (error) {
 			console.error(`Error getting with ID ${id}:`, error);
 			throw error;
@@ -37,18 +31,16 @@ export abstract class BaseService<T extends { [key: string]: any }> {
 	}
 
 	async update(id: string, updates: Partial<T>): Promise<T | null> {
-		return await this.baseRepository().update(id, updates);
+		return await this.repository.update(id, updates);
 	}
 
 	async delete(id: string): Promise<boolean> {
-		return await this.baseRepository().delete(id);
+		return await this.repository.delete(id);
 	}
 
 	async paginator(options: PaginationOptions): Promise<PaginationResult<T>> {
 		try {
-			return (await this.baseRepository().paginate(
-				options
-			)) as PaginationResult<T>;
+			return (await this.repository.paginate(options)) as PaginationResult<T>;
 		} catch (error) {
 			console.error('Error in paginator:', error);
 			throw error;
