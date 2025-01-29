@@ -1,18 +1,19 @@
+import ContactService from '@/modules/contact/contact.service';
 import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { UserCredential } from 'firebase/auth';
+import { Inject, Service } from 'typedi';
+import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
 import { IRegister } from './auth.interface';
-import Container, { Service } from 'typedi';
-import { AuthRepository } from './auth.repository';
-import { BindMethods } from '../decorators/bind-methods.decorator';
-import { ContactService } from '@/modules/contact/contact.service';
+import AuthRepository from './auth.repository';
 
 @Service()
 @BindMethods()
 export class AuthService {
-	private authRepository = Container.get(AuthRepository);
-	private contactService = Container.get(ContactService);
-	constructor() {}
+	constructor(
+		private readonly authRepository: AuthRepository,
+		private readonly contactService: ContactService
+	) {}
 
 	async register(registerData: IRegister): Promise<UserCredential> {
 		const { email, password, ...contactData } = registerData;

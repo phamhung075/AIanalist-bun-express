@@ -3,8 +3,9 @@ import { BaseRepository } from '../_base/crud/BaseRepository';
 import type { IAIRequest } from './ai.interface';
 
 @Service()
-export class AIRepository extends BaseRepository<IAIRequest> {
+class AIRepository extends BaseRepository<IAIRequest> {
 	constructor() {
 		super('ai_requests');
 	}
 }
+export default AIRepository;

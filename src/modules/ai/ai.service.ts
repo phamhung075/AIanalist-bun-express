@@ -1,14 +1,14 @@
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
-import Container, { Service } from 'typedi';
+import { Service } from 'typedi';
 import { BaseService } from '../_base/crud/BaseService';
 import { AIRequest, IAIRequest } from './ai.interface';
-import { AIRepository } from './ai.repository';
-import { PineconeService } from './vector-store/pinecone';
+import AIRepository from './ai.repository';
+import PineconeService from './vector-store/pinecone';
 
 @Service()
-export class AIService extends BaseService<AIRequest> {
+class AIService extends BaseService<AIRequest> {
 	private model: ChatOpenAI;
 
 	constructor(
@@ -23,11 +23,11 @@ export class AIService extends BaseService<AIRequest> {
 	}
 
 	baseRepository(): AIRepository {
-		return Container.get(AIRepository);
+		return this.repository;
 	}
 
 	vectorRepository(): PineconeService {
-		return Container.get(PineconeService);
+		return this.pineconeService;
 	}
 
 	async generateResponse(
@@ -49,8 +49,8 @@ export class AIService extends BaseService<AIRequest> {
 			const chain = template.pipe(this.model).pipe(outputParser);
 
 			const relevantHistory = chatId
-				? await this.vectorRepository().similaritySearch(prompt, 5, { chatId })
-				: await this.vectorRepository().similaritySearch(prompt, 3);
+				? await this.pineconeService.similaritySearch(prompt, 5, { chatId })
+				: await this.pineconeService.similaritySearch(prompt, 3);
 
 			const contextualPrompt =
 				relevantHistory.length > 0
@@ -67,7 +67,7 @@ export class AIService extends BaseService<AIRequest> {
 				throw new Error('No response generated from OpenAI');
 			}
 
-			await this.vectorRepository().addDocument(
+			await this.pineconeService.addDocument(
 				`User: ${prompt}\nAssistant: ${response}`,
 				{
 					timestamp: new Date().toISOString(),
@@ -113,7 +113,7 @@ export class AIService extends BaseService<AIRequest> {
 		limit: number = 10
 	): Promise<any[]> {
 		try {
-			const history = await this.vectorRepository().similaritySearch(
+			const history = await this.pineconeService.similaritySearch(
 				'',
 				limit * page,
 				{
@@ -128,3 +128,5 @@ export class AIService extends BaseService<AIRequest> {
 		}
 	}
 }
+
+export default AIService;

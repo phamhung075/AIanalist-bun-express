@@ -3,20 +3,20 @@ import _ERROR from '@/_core/helper/http-status/error';
 import _SUCCESS from '@/_core/helper/http-status/success';
 import type { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface';
 import type { NextFunction, Response } from 'express';
-import Container, { Service } from 'typedi';
+import { Service } from 'typedi';
 import { BaseController } from '../_base/crud/BaseController';
 import { AIRequest, IAIRequestCreate } from './ai.interface';
-import { AIService } from './ai.service';
+import AIService from './ai.service';
 
 @Service()
 @BindMethods()
-export class AIController extends BaseController<AIRequest> {
-	constructor() {
+class AIController extends BaseController<AIRequest> {
+	constructor(private readonly aiService: AIService) {
 		super(AIRequest);
 	}
 
 	baseService(): AIService {
-		return Container.get(AIService);
+		return this.aiService;
 	}
 
 	async generateResponse(
@@ -25,7 +25,7 @@ export class AIController extends BaseController<AIRequest> {
 		next: NextFunction
 	) {
 		try {
-			const result = await this.baseService().processRequest(req.body);
+			const result = await this.aiService.processRequest(req.body);
 			return new _SUCCESS.OkSuccess({
 				message: 'AI response generated successfully',
 				data: result,
@@ -44,7 +44,7 @@ export class AIController extends BaseController<AIRequest> {
 				});
 			}
 
-			const history = await this.baseService().getChatHistory(chatId);
+			const history = await this.aiService.getChatHistory(chatId);
 			return new _SUCCESS.OkSuccess({
 				message: 'Chat history retrieved successfully',
 				data: history,
@@ -59,12 +59,12 @@ export class AIController extends BaseController<AIRequest> {
 			const { id } = req.params;
 			const { page = 1, limit = 10 } = req.query;
 
-			const entity = await this.baseService().getById(id);
+			const entity = await this.aiService.getById(id);
 			if (!entity) {
 				throw new _ERROR.NotFoundError({ message: 'Chat not found' });
 			}
 
-			const history = await this.baseService().getChatHistory(
+			const history = await this.aiService.getChatHistory(
 				entity.chatId as string,
 				Number(page),
 				Number(limit)
@@ -85,3 +85,5 @@ export class AIController extends BaseController<AIRequest> {
 		}
 	}
 }
+
+export default AIController;

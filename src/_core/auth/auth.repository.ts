@@ -13,7 +13,7 @@ import _ERROR from '../helper/http-status/error/index';
 import type { IAuth } from './auth.interface';
 
 @Service()
-export class AuthRepository {
+class AuthRepository {
 	private isTestEnvironment: boolean;
 	private clientAuth; // For client-side operations
 	private adminAuth; // For admin operations
@@ -202,3 +202,5 @@ export class AuthRepository {
 		}
 	}
 }
+
+export default AuthRepository;

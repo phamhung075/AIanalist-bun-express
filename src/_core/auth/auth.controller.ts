@@ -1,19 +1,18 @@
 import type { RequestHandler, Response } from 'express';
+import { Inject, Service } from 'typedi';
+import { config } from '../config/dotenv.config';
+import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
 import _SUCCESS from '../helper/http-status/success';
 import { CustomRequest } from '../helper/interfaces/CustomRequest.interface';
 import { getTokenCookies } from '../middleware/auth.middleware';
-import { IRegister, IAuth } from './auth.interface';
-import { config } from '../config/dotenv.config';
-import Container, { Service } from 'typedi';
-import { BindMethods } from '../decorators/bind-methods.decorator';
+import { IAuth, IRegister } from './auth.interface';
 import AuthService from './auth.service';
 
 @Service()
 @BindMethods()
 class AuthController {
-	private authService = Container.get(AuthService);
-	constructor() {}
+	constructor(private readonly authService: AuthService) {}
 
 	register: RequestHandler = async (
 		req: CustomRequest<IRegister>,

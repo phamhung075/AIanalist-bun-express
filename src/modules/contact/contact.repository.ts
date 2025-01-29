@@ -3,8 +3,10 @@ import { BaseRepository } from '../_base/crud/BaseRepository';
 import type { Contact } from './contact.interface';
 
 @Service()
-export class ContactRepository extends BaseRepository<Contact> {
+class ContactRepository extends BaseRepository<Contact> {
 	constructor() {
 		super('contacts');
 	}
 }
+
+export default ContactRepository;
