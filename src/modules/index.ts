@@ -1,11 +1,5 @@
 import { firebaseAuthMiddleware } from '@middleware/auth.middleware';
-import {
-	Router,
-	Request,
-	Response,
-	NextFunction,
-	RequestHandler,
-} from 'express';
+import { RequestHandler, Router } from 'express';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 const router: Router = Router();
