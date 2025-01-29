@@ -16,7 +16,7 @@ export class AIController extends BaseController<AIRequest> {
 		super(AIRequest);
 	}
 
-	baseService(): BaseService<AIRequest> {
+	baseService(): AIService {
 		return Container.get(AIService);
 	}
 
@@ -26,7 +26,7 @@ export class AIController extends BaseController<AIRequest> {
 		next: NextFunction
 	) {
 		try {
-			const result = await this.aiService.processRequest(req.body);
+			const result = await this.baseService().processRequest(req.body);
 			return new _SUCCESS.OkSuccess({
 				message: 'AI response generated successfully',
 				data: result,
@@ -45,7 +45,7 @@ export class AIController extends BaseController<AIRequest> {
 				});
 			}
 
-			const history = await this.aiService.getChatHistory(chatId);
+			const history = await this.baseService().getChatHistory(chatId);
 			return new _SUCCESS.OkSuccess({
 				message: 'Chat history retrieved successfully',
 				data: history,
@@ -60,12 +60,12 @@ export class AIController extends BaseController<AIRequest> {
 			const { id } = req.params;
 			const { page = 1, limit = 10 } = req.query;
 
-			const entity = await this.aiService.getById(id);
+			const entity = await this.baseService().getById(id);
 			if (!entity) {
 				throw new _ERROR.NotFoundError({ message: 'Chat not found' });
 			}
 
-			const history = await this.aiService.getChatHistory(
+			const history = await this.baseService().getChatHistory(
 				entity.chatId as string,
 				Number(page),
 				Number(limit)

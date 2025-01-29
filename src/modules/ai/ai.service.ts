@@ -23,8 +23,12 @@ export class AIService extends BaseService<AIRequest> {
 		});
 	}
 
-	baseRepository(): BaseRepository<AIRequest> {
+	baseRepository(): AIRepository {
 		return Container.get(AIRepository);
+	}
+
+	vectorRepository(): PineconeService {
+		return Container.get(PineconeService);
 	}
 
 	async generateResponse(
@@ -46,8 +50,8 @@ export class AIService extends BaseService<AIRequest> {
 			const chain = template.pipe(this.model).pipe(outputParser);
 
 			const relevantHistory = chatId
-				? await this.pineconeService.similaritySearch(prompt, 5, { chatId })
-				: await this.pineconeService.similaritySearch(prompt, 3);
+				? await this.vectorRepository().similaritySearch(prompt, 5, { chatId })
+				: await this.vectorRepository().similaritySearch(prompt, 3);
 
 			const contextualPrompt =
 				relevantHistory.length > 0
@@ -64,7 +68,7 @@ export class AIService extends BaseService<AIRequest> {
 				throw new Error('No response generated from OpenAI');
 			}
 
-			await this.pineconeService.addDocument(
+			await this.vectorRepository().addDocument(
 				`User: ${prompt}\nAssistant: ${response}`,
 				{
 					timestamp: new Date().toISOString(),
@@ -110,7 +114,7 @@ export class AIService extends BaseService<AIRequest> {
 		limit: number = 10
 	): Promise<any[]> {
 		try {
-			const history = await this.pineconeService.similaritySearch(
+			const history = await this.vectorRepository().similaritySearch(
 				'',
 				limit * page,
 				{

@@ -12,7 +12,7 @@ export class ContactController extends BaseController<Contact> {
 		super(Contact);
 	}
 
-	baseService(): BaseService<Contact> {
+	baseService(): ContactService {
 		return Container.get(ContactService);
 	}
 }

@@ -13,7 +13,7 @@ export class ContactService extends BaseService<Contact> {
 		super(Contact);
 	}
 
-	baseRepository(): BaseRepository<Contact> {
+	baseRepository(): ContactRepository {
 		return Container.get(ContactRepository);
 	}
 }
