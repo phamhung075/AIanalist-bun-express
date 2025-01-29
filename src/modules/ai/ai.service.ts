@@ -1,25 +1,30 @@
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { ChatOpenAI, OpenAI } from '@langchain/openai';
-import { Service } from 'typedi';
+import { ChatOpenAI } from '@langchain/openai';
+import Container, { Service } from 'typedi';
+import { BaseRepository } from '../_base/crud/BaseRepository';
 import { BaseService } from '../_base/crud/BaseService';
-import type { IAIRequest, IAIRequestCreate } from './ai.interface';
-import type AIRepository from './ai.repository';
+import { AIRequest, IAIRequest } from './ai.interface';
+import { AIRepository } from './ai.repository';
 import { PineconeService } from './vector-store/pinecone';
 
 @Service()
-class AIService extends BaseService<IAIRequest> {
+export class AIService extends BaseService<AIRequest> {
 	private model: ChatOpenAI;
 
 	constructor(
 		protected readonly repository: AIRepository,
 		protected readonly pineconeService: PineconeService
 	) {
-		super(repository);
+		super(AIRequest);
 		this.model = new ChatOpenAI({
 			openAIApiKey: process.env.OPENAI_API_KEY,
 			temperature: 0.7,
 		});
+	}
+
+	baseRepository(): BaseRepository<AIRequest> {
+		return Container.get(AIRepository);
 	}
 
 	async generateResponse(
@@ -75,12 +80,12 @@ class AIService extends BaseService<IAIRequest> {
 		}
 	}
 
-	async processRequest(data: IAIRequestCreate): Promise<IAIRequest> {
+	async processRequest(data: AIRequest): Promise<AIRequest> {
 		try {
 			const finalChatId = data.chatId || crypto.randomUUID();
 
 			const response = await this.generateResponse(
-				data.prompt,
+				data.prompt as string,
 				finalChatId, // Pass the same ID
 				data.temperature,
 				data.maxTokens
@@ -120,5 +125,3 @@ class AIService extends BaseService<IAIRequest> {
 		}
 	}
 }
-
-export default AIService;

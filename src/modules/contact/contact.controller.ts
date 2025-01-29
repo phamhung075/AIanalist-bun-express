@@ -1,19 +1,18 @@
-import { Service } from 'typedi';
-import { BaseController } from '../_base/crud/BaseController';
-import type { CreateInput, UpdateInput } from './contact.dto';
-import type { IContact } from './contact.interface';
-import type ContactService from './contact.service';
 import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
-
+import Container, { Service } from 'typedi';
+import { BaseController } from '../_base/crud/BaseController';
+import { BaseService } from '../_base/crud/BaseService';
+import { Contact } from './contact.interface';
+import { ContactService } from './contact.service';
 
 @Service()
 @BindMethods()
-class ContactController extends BaseController<IContact, CreateInput, UpdateInput> {
-    constructor(
-        protected readonly contactService: ContactService
-    ) {
-        super(contactService);
-    }
-}
+export class ContactController extends BaseController<Contact> {
+	constructor(private readonly contactService: ContactService) {
+		super(Contact);
+	}
 
-export default ContactController;
+	baseService(): BaseService<Contact> {
+		return Container.get(ContactService);
+	}
+}

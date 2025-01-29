@@ -8,7 +8,7 @@ import {
 	validateUpdateDTO,
 } from './contact.dto';
 import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
-import { contactController } from '.';
+import { contactController, contactService } from '.';
 
 // Create router with source tracking
 const router = createRouter(__filename);

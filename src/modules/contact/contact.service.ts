@@ -1,18 +1,19 @@
 // contact.service.ts
 
-import { Service } from 'typedi';
-import { BaseService } from "../_base/crud/BaseService";
-import type { IContact } from "./contact.interface";
-import type ContactRepository from "./contact.repository";
-
+import Container, { Service } from 'typedi';
+import { BaseRepository } from '../_base/crud/BaseRepository';
+import { BaseService } from '../_base/crud/BaseService';
+import { Contact } from './contact.interface';
+import { ContactRepository } from './contact.repository';
 
 @Service()
-class ContactService extends BaseService<IContact> {
-    constructor(
-        protected readonly repository: ContactRepository
-    ) {
-        super(repository);
-    }
-}
+export class ContactService extends BaseService<Contact> {
+	contactRepository?: ContactRepository;
+	constructor(private readonly repository: ContactRepository) {
+		super(Contact);
+	}
 
-export default ContactService;
+	baseRepository(): BaseRepository<Contact> {
+		return Container.get(ContactRepository);
+	}
+}

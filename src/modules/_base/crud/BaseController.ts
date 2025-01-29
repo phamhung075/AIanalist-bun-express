@@ -1,193 +1,182 @@
-import _ERROR from "@/_core/helper/http-status/error";
-import _SUCCESS from "@/_core/helper/http-status/success";
-import { CustomRequest } from "@/_core/helper/interfaces/CustomRequest.interface";
+import _ERROR from '@/_core/helper/http-status/error';
+import _SUCCESS from '@/_core/helper/http-status/success';
+import { CustomRequest } from '@/_core/helper/interfaces/CustomRequest.interface';
 
-import { PaginationResult } from "@/_core/helper/interfaces/rest.interface";
-import { NextFunction, Response } from "express";
-import { Service } from "typedi";
-import { BaseService } from "./BaseService";
-import { PaginationInput } from "@/_core/helper/validateZodSchema/Pagination.validation";
-import { PaginationOptions } from "@/_core/helper/interfaces/PaginationServer.interface";
+import { PaginationResult } from '@/_core/helper/interfaces/rest.interface';
+import { NextFunction, Response } from 'express';
+import { Service } from 'typedi';
+import { BaseService } from './BaseService';
+import { PaginationInput } from '@/_core/helper/validateZodSchema/Pagination.validation';
+import { PaginationOptions } from '@/_core/helper/interfaces/PaginationServer.interface';
 
 /**
  * Generic Controller Class for CRUD and Pagination Operations
  */
 @Service()
-export abstract class BaseController<
-  T extends CreateDTO & { id?: string },
-  CreateDTO,
-  UpdateDTO
-> {
-  protected readonly service: BaseService<T>;
+export abstract class BaseController<T extends { [key: string]: any }> {
+	abstract baseService(): BaseService<T>;
 
-  constructor(service: BaseService<T>) {
-    if (!service) {
-      throw new Error("Service must be provided to BaseController");
-    }
-    this.service = service;
-    // Add debug log
-    // console.log('BaseController constructor, service:', this.service);
-  }
+	constructor(private classConstructor: new (...args: any[]) => T) {}
 
-  async create(
-    req: CustomRequest<CreateDTO>,
-    res: Response,
-    _next: NextFunction
-  ) {
-    try {
-      const inputData: CreateDTO = req.body;
+	protected getClassName() {
+		return this.classConstructor.name;
+	}
 
-      const entity = await this.service.create(inputData as Omit<T, "id">);
+	async create(req: CustomRequest<T>, res: Response, _next: NextFunction) {
+		try {
+			const inputData: T = req.body;
 
-      if (!entity) {
-        throw new _ERROR.BadRequestError({
-          message: "Creation failed",
-        });
-      }
-      return new _SUCCESS.CreatedSuccess({
-        message: "Entity created successfully",
-        data: entity,
-      }).send(res, _next);
-    } catch (error) {
-      _next(error);
-    }
-  }
+			const entity = await this.baseService().create(
+				inputData as Omit<T, 'id'>
+			);
 
-  /**
-   * ✅ Get all entities
-   */
-  async getAll(req: CustomRequest, res: Response, _next: NextFunction) {
-    try {
-        const pagination: PaginationInput = {
-            page: Number(req.query.page) || 1,
-            limit: Number(req.query.limit) || 10,
-            sort: req.query.sort as string || 'createdAt',
-            order: req.query.order as 'asc' | 'desc' || 'desc',
-        };
+			if (!entity) {
+				throw new _ERROR.BadRequestError({
+					message: 'Creation failed',
+				});
+			}
+			return new _SUCCESS.CreatedSuccess({
+				message: 'Entity created successfully',
+				data: entity,
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 
-        console.log('Pagination Input:', pagination); // Debug log
+	/**
+	 * ✅ Get all entities
+	 */
+	async getAll(req: CustomRequest, res: Response, _next: NextFunction) {
+		try {
+			const pagination: PaginationInput = {
+				page: Number(req.query.page) || 1,
+				limit: Number(req.query.limit) || 10,
+				sort: (req.query.sort as string) || 'createdAt',
+				order: (req.query.order as 'asc' | 'desc') || 'desc',
+			};
 
-        const results = await this.service.getAll(pagination) as PaginationResult<T>;
-        console.log("results ------------>", results)
+			console.log('Pagination Input:', pagination); // Debug log
 
-        return new _SUCCESS.OkSuccess({
-            message: 'Fetched entities successfully',
-            pagination: results,            
-        }).send(res, _next);
-    } catch (error) {
-        _next(error);
-    }
-}
+			const results = (await this.baseService().getAll(
+				pagination
+			)) as PaginationResult<T>;
+			console.log('results ------------>', results);
 
-  /**
-   * ✅ Get entity by ID
-   */
-  async getById(req: CustomRequest, res: Response, _next: NextFunction) {
-    try {
-      const { id } = req.params;
-      const entity = await this.service.getById(id);
+			return new _SUCCESS.OkSuccess({
+				message: 'Fetched entities successfully',
+				pagination: results,
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 
-      if (!entity) {
-        throw new _ERROR.NotFoundError({
-          message: "Entity not found",
-        });
-      }
+	/**
+	 * ✅ Get entity by ID
+	 */
+	async getById(req: CustomRequest, res: Response, _next: NextFunction) {
+		console.log('getById --->');
+		try {
+			const { id } = req.params;
+			const entity = await this.baseService().getById(id);
 
-      return new _SUCCESS.OkSuccess({
-        message: "Fetched entity by ID successfully",
-        data: entity,
-      }).send(res, _next);
-    } catch (error) {
-      _next(error);
-    }
-  }
+			if (!entity) {
+				throw new _ERROR.NotFoundError({
+					message: 'Entity not found',
+				});
+			}
 
-  /**
-   * ✅ Update an entity by ID
-   */
-  async update(
-    req: CustomRequest<UpdateDTO>,
-    res: Response,
-    _next: NextFunction
-  ) {
-    try {
-      const { id } = req.params;
-      const inputData: UpdateDTO = req.body;
+			return new _SUCCESS.OkSuccess({
+				message: 'Fetched entity by ID successfully',
+				data: entity,
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 
-      const entity = await this.service.update(
-        id,
-        inputData as unknown as Partial<T>
-      );
+	/**
+	 * ✅ Update an entity by ID
+	 */
+	async update(req: CustomRequest<T>, res: Response, _next: NextFunction) {
+		try {
+			const { id } = req.params;
+			const inputData: T = req.body;
 
-      if (!entity) {
-        throw new _ERROR.NotFoundError({
-          message: "Entity not found",
-        });
-      }
+			const entity = await this.baseService().update(
+				id,
+				inputData as unknown as Partial<T>
+			);
 
-      return new _SUCCESS.OkSuccess({
-        message: "Entity updated successfully",
-        data: entity as unknown as UpdateDTO,
-      }).send(res, _next);
-    } catch (error) {
-      _next(error);
-    }
-  }
+			if (!entity) {
+				throw new _ERROR.NotFoundError({
+					message: 'Entity not found',
+				});
+			}
 
-  /**
-   * ✅ Delete an entity by ID
-   */
-  async delete(req: CustomRequest, res: Response, _next: NextFunction) {
-    try {
-      const { id } = req.params;
-      const result = await this.service.delete(id);
+			return new _SUCCESS.OkSuccess({
+				message: 'Entity updated successfully',
+				data: entity as T,
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 
-      if (!result) {
-        throw new _ERROR.NotFoundError({
-          message: "Entity not found",
-        });
-      }
+	/**
+	 * ✅ Delete an entity by ID
+	 */
+	async delete(req: CustomRequest, res: Response, _next: NextFunction) {
+		try {
+			const { id } = req.params;
+			const result = await this.baseService().delete(id);
 
-      return new _SUCCESS.OkSuccess({
-        message: "Entity deleted successfully",
-      }).send(res, _next);
-    } catch (error) {
-      _next(error);
-    }
-  }
+			if (!result) {
+				throw new _ERROR.NotFoundError({
+					message: 'Entity not found',
+				});
+			}
 
-  /**
-   * ✅ Paginated Query
-   */
-  async paginator(req: CustomRequest, res: Response, _next: NextFunction) {
-    try {
-      const { page = "1", limit = "10", all = "false" } = req.query;
+			return new _SUCCESS.OkSuccess({
+				message: 'Entity deleted successfully',
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 
-      const pageNumber = Number(page);
-      const limitNumber = Number(limit);
+	/**
+	 * ✅ Paginated Query
+	 */
+	async paginator(req: CustomRequest, res: Response, _next: NextFunction) {
+		try {
+			const { page = '1', limit = '10', all = 'false' } = req.query;
 
-      if (isNaN(pageNumber) || isNaN(limitNumber)) {
-        throw new _ERROR.BadRequestError({
-          message: "Invalid page or limit parameters",
-        });
-      }
+			const pageNumber = Number(page);
+			const limitNumber = Number(limit);
 
-      const options: PaginationOptions = {
-        page: pageNumber,
-        limit: limitNumber,
-        all: all === "true",
-      };
+			if (isNaN(pageNumber) || isNaN(limitNumber)) {
+				throw new _ERROR.BadRequestError({
+					message: 'Invalid page or limit parameters',
+				});
+			}
 
-      const paginationResult: PaginationResult<T> = await this.service.paginator(
-        options
-      ) as PaginationResult<T>;
+			const options: PaginationOptions = {
+				page: pageNumber,
+				limit: limitNumber,
+				all: all === 'true',
+			};
 
-      return new _SUCCESS.OkSuccess({
-        message: "Fetched paginated entities successfully",
-        pagination: paginationResult,
-      }).send(res, _next);
-    } catch (error) {
-      _next(error);
-    }
-  }
+			const paginationResult: PaginationResult<T> =
+				(await this.baseService().paginator(options)) as PaginationResult<T>;
+
+			return new _SUCCESS.OkSuccess({
+				message: 'Fetched paginated entities successfully',
+				pagination: paginationResult,
+			}).send(res, _next);
+		} catch (error) {
+			_next(error);
+		}
+	}
 }
