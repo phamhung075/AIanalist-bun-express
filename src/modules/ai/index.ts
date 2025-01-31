@@ -5,17 +5,10 @@ import AIService from './ai.service';
 import PineconeService from './vector-store/pinecone';
 
 // Créer des instances avec une injection de dépendance appropriée
-const aiRepository = new AIRepository();
-Container.set(AIRepository, aiRepository);
-
-const pineconeService = new PineconeService();
-Container.set(PineconeService, pineconeService);
-
-const aiService = new AIService(aiRepository, pineconeService);
-Container.set(AIService, aiService);
-
-const aiController = new AIController(aiService);
-Container.set(AIController, aiController);
+const aiRepository = Container.get(AIRepository);
+const pineconeService = Container.get(PineconeService);
+const aiService = Container.get(AIService);
+const aiController = Container.get(AIController);
 
 // Exporter les instances
 export { aiService, aiController, aiRepository, pineconeService };

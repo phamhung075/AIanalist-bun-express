@@ -13,7 +13,7 @@ class AIService extends BaseService<AIRequest> {
 
 	constructor(
 		readonly repository: AIRepository,
-		readonly pineconeService: PineconeService
+		private readonly pineconeService: PineconeService
 	) {
 		super(repository);
 		this.model = new ChatOpenAI({

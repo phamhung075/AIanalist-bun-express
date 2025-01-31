@@ -4,15 +4,9 @@ import AuthRepository from './auth.repository';
 import AuthService from './auth.service';
 import { contactService } from '@/modules/contact';
 
-// Create instances with proper dependency injection
-const authRepository = new AuthRepository();
-Container.set(AuthRepository, authRepository);
-
-const authService = new AuthService(authRepository, contactService);
-Container.set(AuthService, authService);
-
-const authController = new AuthController(authService);
-Container.set(AuthController, authController);
+const authRepository = Container.get(AuthRepository);
+const authService = Container.get(AuthService);
+const authController = Container.get(AuthController);
 
 // Export the instances
 export { authService, authController, authRepository };

@@ -1,5 +1,5 @@
 import type { RequestHandler, Response } from 'express';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 import { config } from '../config/dotenv.config';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
@@ -12,7 +12,7 @@ import AuthService from './auth.service';
 @Service()
 @BindMethods()
 class AuthController {
-	constructor(readonly authService: AuthService) {}
+	constructor(@Inject() private readonly authService: AuthService) {}
 
 	register: RequestHandler = async (
 		req: CustomRequest<IRegister>,
