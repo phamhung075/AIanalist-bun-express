@@ -1,14 +1,14 @@
-import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
-import { asyncHandler } from '@/_core/helper/asyncHandler/index';
 import { config } from '@/_core/config/dotenv.config';
+import { asyncHandler } from '@/_core/helper/asyncHandler/index';
+import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
 import { firebaseAuthMiddleware } from '@/_core/middleware/auth.middleware';
+import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
+import { contactController } from '.';
 import {
 	validateCreateDTO,
 	validateIdDTO,
 	validateUpdateDTO,
 } from './contact.dto';
-import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
-import { contactController, contactService } from '.';
 
 // Create router with source tracking
 const router = createRouter(__filename);

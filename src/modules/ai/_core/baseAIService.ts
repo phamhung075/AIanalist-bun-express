@@ -1,40 +1,55 @@
+// baseAIService.ts
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 import { Service } from 'typedi';
-import { BaseService } from '../_base/crud/BaseService';
-import { AIRequest, IAIRequest } from './ai.interface';
-import AIRepository from './ai.repository';
-import PineconeService from './vector-store/pinecone';
+import { BaseService } from '../../_base/crud/BaseService';
+import { AIRequest, IAIRequest } from './../ai.interface';
+import AIRepository from './../ai.repository';
+import PineconeService from './../vector-store/pinecone';
+
+interface AIModelConfig {
+	apiKey: string;
+	baseURL?: string;
+	modelName?: string;
+	temperature?: number;
+	maxTokens?: number;
+}
 
 @Service()
-class AIService extends BaseService<AIRequest> {
-	private model: ChatOpenAI;
+export abstract class BaseAIService extends BaseService<AIRequest> {
+	protected model: ChatOpenAI;
 
 	constructor(
-		readonly repository: AIRepository,
-		private readonly pineconeService: PineconeService
+		protected readonly repository: AIRepository,
+		protected readonly pineconeService: PineconeService,
+		config: AIModelConfig
 	) {
 		super(repository);
 		this.model = new ChatOpenAI({
-			openAIApiKey: process.env.OPENAI_API_KEY,
-			temperature: 0.7,
+			openAIApiKey: config.apiKey,
+			temperature: config.temperature ?? 0.7,
+			maxTokens: config.maxTokens ?? 500,
+			modelName: config.modelName,
+			configuration: config.baseURL
+				? {
+						baseURL: config.baseURL,
+				  }
+				: undefined,
 		});
 	}
 
-	async generateResponse(
+	protected async generateResponse(
 		prompt: string,
 		chatId?: string,
 		temperature?: number,
 		maxTokens?: number
 	): Promise<string> {
 		try {
-			this.model = new ChatOpenAI({
-				openAIApiKey: process.env.OPENAI_API_KEY,
-				temperature: temperature || 0.7,
-				maxTokens: maxTokens || 1000,
-				modelName: 'gpt-3.5-turbo', // or your preferred model
-			});
+			if (temperature !== undefined || maxTokens !== undefined) {
+				this.model.temperature = temperature ?? 0.7;
+				this.model.maxTokens = maxTokens ?? 500;
+			}
 
 			const template = ChatPromptTemplate.fromTemplate(`{input}`);
 			const outputParser = new StringOutputParser();
@@ -56,7 +71,7 @@ class AIService extends BaseService<AIRequest> {
 			});
 
 			if (!response) {
-				throw new Error('No response generated from OpenAI');
+				throw new Error('No response generated');
 			}
 
 			await this.pineconeService.addDocument(
@@ -81,7 +96,7 @@ class AIService extends BaseService<AIRequest> {
 
 			const response = await this.generateResponse(
 				data.prompt as string,
-				finalChatId, // Pass the same ID
+				finalChatId,
 				data.temperature,
 				data.maxTokens
 			);
@@ -89,7 +104,7 @@ class AIService extends BaseService<AIRequest> {
 			const record = await this.create({
 				...data,
 				response,
-				chatId: finalChatId, // Use the same ID
+				chatId: finalChatId,
 			});
 
 			return record as IAIRequest;
@@ -120,5 +135,3 @@ class AIService extends BaseService<AIRequest> {
 		}
 	}
 }
-
-export default AIService;

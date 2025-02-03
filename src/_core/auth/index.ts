@@ -2,14 +2,13 @@ import { Container } from 'typedi';
 import AuthController from './auth.controller';
 import AuthRepository from './auth.repository';
 import AuthService from './auth.service';
-import { contactService } from '@/modules/contact';
 
 const authRepository = Container.get(AuthRepository);
 const authService = Container.get(AuthService);
 const authController = Container.get(AuthController);
 
 // Export the instances
-export { authService, authController, authRepository };
+export { authController, authRepository, authService };
 
 // Also export the types/classes for type usage
 export { default as AuthController } from './auth.controller';

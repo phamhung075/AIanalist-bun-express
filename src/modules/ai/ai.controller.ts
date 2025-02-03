@@ -6,12 +6,14 @@ import type { NextFunction, Response } from 'express';
 import { Service } from 'typedi';
 import { BaseController } from '../_base/crud/BaseController';
 import { AIRequest, IAIRequestCreate } from './ai.interface';
-import AIService from './ai.service';
+import { OpenAIService } from './openai/openai.service';
 
 @Service()
 @BindMethods()
 class AIController extends BaseController<AIRequest> {
-	constructor(readonly aiService: AIService) {
+	constructor(
+		readonly aiService: OpenAIService // readonly aiService: DeepseekService
+	) {
 		super(aiService);
 	}
 
