@@ -39,11 +39,7 @@ router.get(
 	firebaseAuthMiddleware,
 	asyncHandler(authController.getCurrentUser)
 );
-router.post(
-	'/verify',
-	firebaseAuthMiddleware,
-	asyncHandler(authController.getCurrentUser)
-);
+
 router.post(
 	'/refreshtoken',
 	firebaseAuthMiddleware,
