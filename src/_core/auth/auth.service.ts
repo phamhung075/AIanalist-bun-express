@@ -20,7 +20,7 @@ export class AuthService {
 
 		const userCred = await this.authRepository.createUser({ email, password });
 
-		(await this.contactService.createWithId(userCred.user.uid, {
+		const newContact = (await this.contactService.create({
 			...contactData,
 			email,
 		})) as Contact;

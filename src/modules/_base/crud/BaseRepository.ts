@@ -235,4 +235,33 @@ export class BaseRepository<T extends BaseDocument> {
 
 		return new Error(message);
 	}
+
+	async findOneByField(
+		field: string,
+		value: string | string[]
+	): Promise<T | null> {
+		const query = Array.isArray(value)
+			? this.collection.where(field, 'array-contains-any', value)
+			: this.collection.where(field, '==', value);
+
+		return query
+			.get()
+			.then((querySnapshot) => {
+				if (querySnapshot.empty) {
+					return null;
+				}
+				const doc = querySnapshot.docs[0];
+				const data = this.mapDocumentData(doc);
+				if (this.softDelete && data.deletedAt) {
+					return null;
+				}
+				return data;
+			})
+			.catch((error) => {
+				throw this.handleError(
+					error,
+					`Échec de la récupération du document avec ${field} = ${value}`
+				);
+			});
+	}
 }

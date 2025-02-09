@@ -1,6 +1,5 @@
 export interface ISubscription {
 	id: string;
-	userId: string;
 	planId: string;
 	status: 'active' | 'cancelled' | 'expired' | 'pending';
 	startDate: Date;

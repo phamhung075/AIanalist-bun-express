@@ -62,6 +62,16 @@ const initRoutes = async () => {
 		subscriptionRouter
 	);
 
+	//load account routes
+	const accountRoutePath = resolve(__dirname, './account/route.ts');
+	const accountRouter = await loadRoute(accountRoutePath);
+	console.log('loading account route from:', accountRoutePath);
+	router.use(
+		API_CONFIG.PREFIX + '/account',
+		firebaseAuthMiddleware,
+		accountRouter
+	);
+
 	// const tradingRoutePath = resolve(__dirname, "./trading-economics-new/index.ts");
 	// const tradingRouter = await loadRoute(tradingRoutePath);
 	// console.log ("loading contact route from :", tradingRoutePath);
