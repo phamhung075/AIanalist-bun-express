@@ -14,6 +14,20 @@ import { UpdatePasswordDTO } from './profile.interface';
 class ProfileController {
 	constructor(private readonly profileService: ProfileService) {}
 
+	getProfile: RequestHandler = async (req: CustomRequest, res) => {
+		console.log(req.user);
+		if (!req.user?.uid) {
+			throw new _ERROR.UnauthorizedError({ message: 'Unauthorized' });
+		}
+
+		const result = await this.profileService.getProfile(req.user.uid);
+
+		new _SUCCESS.OkSuccess({
+			message: 'Profile fetched successfully',
+			data: result,
+		}).send(res);
+	};
+
 	updateProfile: RequestHandler = async (req: CustomRequest, res) => {
 		if (!req.user?.uid)
 			throw new _ERROR.UnauthorizedError({ message: 'Unauthorized' });

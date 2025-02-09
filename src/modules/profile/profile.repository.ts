@@ -1,5 +1,5 @@
 // profile.repository.ts
-import { Service } from 'typedi';
+import Container, { Service } from 'typedi';
 import {
 	EmailAuthProvider,
 	GoogleAuthProvider,
@@ -19,17 +19,57 @@ import {
 import { Profile, UpdatePasswordDTO } from './profile.interface';
 import { firebaseAdminAuth } from '@/_core/database/firebase-admin-sdk';
 import _ERROR from '@/_core/helper/http-status/error';
+import { AuthService } from '@/_core/auth';
 
 @Service()
 class ProfileRepository {
 	private adminAuth;
 	private clientAuth;
+	private authService: AuthService;
 	private firestore: Firestore;
 
 	constructor() {
 		this.adminAuth = firebaseAdminAuth;
 		this.clientAuth = getClientAuth();
 		this.firestore = getFirestore();
+		this.authService = Container.get(AuthService);
+	}
+
+	async getProfile(userId: string): Promise<Profile> {
+		try {
+			const userRecord = await this.authService.getUser(userId);
+			const userDocRef = doc(this.firestore, `users/${userId}`);
+			const userDocSnap = await getDoc(userDocRef);
+
+			if (!userDocSnap.exists()) {
+				throw new _ERROR.NotFoundError({
+					message: 'User document not found',
+				});
+			}
+
+			const data = userDocSnap.data();
+
+			// Fusionner les données Firestore avec les données Auth
+			return {
+				...data,
+				email: userRecord.email || data.email,
+				firstname: data.firstname || '',
+				lastname: data.lastname || '',
+				notification: data.notification || false,
+				linkedAccounts: userRecord.providerData
+					.map((p: any) => p.email)
+					.filter(Boolean) as string[],
+				authProvider: userRecord.providerData[0]?.providerId || 'unknown',
+			};
+		} catch (error: any) {
+			console.error('Erreur lors de la récupération du profil:', error);
+			if (error instanceof _ERROR.NotFoundError) {
+				throw error;
+			}
+			throw new _ERROR.InternalServerError({
+				message: 'Échec de la récupération du profil',
+			});
+		}
 	}
 
 	async updateProfile(

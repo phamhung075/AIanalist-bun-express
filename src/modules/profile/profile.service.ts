@@ -9,6 +9,10 @@ import { BindMethods } from '@/_core/decorators/bind-methods.decorator';
 class ProfileService {
 	constructor(private readonly profileRepository: ProfileRepository) {}
 
+	async getProfile(userId: string): Promise<Profile> {
+		return this.profileRepository.getProfile(userId);
+	}
+
 	async updateProfile(
 		userId: string,
 		profile: Partial<Profile>

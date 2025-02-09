@@ -20,6 +20,12 @@ router.use(
 	})
 );
 
+router.get(
+	'/',
+	firebaseAuthMiddleware,
+	asyncHandler(profileController.getProfile)
+);
+
 router.put(
 	'/',
 	firebaseAuthMiddleware,
