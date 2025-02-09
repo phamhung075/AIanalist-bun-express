@@ -52,6 +52,12 @@ const initRoutes = async () => {
 	// console.log("loading AI route from:", aiRoutePath);
 	router.use(API_CONFIG.PREFIX + '/ai', firebaseAuthMiddleware, aiRouter);
 
+	// Load Profile routes
+	const profileRoutePath = resolve(__dirname, './profile/profile.routes.ts');
+	const profileRouter = await loadRoute(profileRoutePath);
+	// console.log("loading Profile route from:", profileRoutePath);
+	router.use(API_CONFIG.PREFIX + '/profile', profileRouter);
+
 	// const tradingRoutePath = resolve(__dirname, "./trading-economics-new/index.ts");
 	// const tradingRouter = await loadRoute(tradingRoutePath);
 	// console.log ("loading contact route from :", tradingRoutePath);
