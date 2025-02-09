@@ -2,14 +2,13 @@ import { config } from '@/_core/config/dotenv.config';
 import { asyncHandler } from '@/_core/helper/asyncHandler/index';
 import { validatePaginationDTO } from '@/_core/helper/validateZodSchema/Pagnination.dto';
 import { createHATEOASMiddleware, createRouter } from 'express-route-tracker';
-import { contactController } from '.';
+import { subscriptionController } from '.';
 import {
 	validateCreateDTO,
 	validateIdDTO,
 	validateUpdateDTO,
-} from './contact.dto';
+} from './subscription.dto';
 
-// Create router with source tracking
 const router = createRouter(__filename);
 
 router.use(
@@ -28,18 +27,34 @@ router.use(
 	})
 );
 
-// Define routes without baseApi prefix
-router.post('/', validateCreateDTO, asyncHandler(contactController.create));
-router.get('/me', asyncHandler(contactController.getMyContact));
-router.get('/', validatePaginationDTO, asyncHandler(contactController.getAll)); // pagination possible http://localhost:3333/api/contact?page=1&limit=2&sort=createdAt&order=desc
-router.get('/:id', validateIdDTO, asyncHandler(contactController.getById));
-// router.put('/:id', firebaseAuthMiddleware,validateIdDTO, validateCreateDTO, asyncHandler(contactController.replace)); //todo
+router.post(
+	'/',
+	validateCreateDTO,
+	asyncHandler(subscriptionController.create)
+);
+router.get('/me', asyncHandler(subscriptionController.getMySubscriptions));
+
+router.get(
+	'/',
+	validatePaginationDTO,
+	asyncHandler(subscriptionController.getAll)
+);
+router.get('/:id', validateIdDTO, asyncHandler(subscriptionController.getById));
 router.patch(
 	'/:id',
 	validateIdDTO,
 	validateUpdateDTO,
-	asyncHandler(contactController.update)
+	asyncHandler(subscriptionController.update)
 );
-router.delete('/:id', validateIdDTO, asyncHandler(contactController.delete));
+router.delete(
+	'/:id',
+	validateIdDTO,
+	asyncHandler(subscriptionController.delete)
+);
+router.post(
+	'/:id/cancel',
+	validateIdDTO,
+	asyncHandler(subscriptionController.cancelSubscription)
+);
 
 export default router;

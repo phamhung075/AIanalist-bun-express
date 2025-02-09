@@ -18,8 +18,21 @@ export interface IRegister {
 export interface AuthTokens {
 	idToken: string;
 	refreshToken: string;
-	user: {
-		id: string;
+	user?: {
+		uid: string;
 		email: string;
+		emailVerified: boolean;
+		displayName: string;
+		phoneNumber: string;
+		photoURL: string;
+		isAnonymous: boolean;
 	};
+}
+
+export interface IUserProfileUpdate {
+	displayName?: string;
+	photoURL?: string;
+	email?: string;
+	phoneNumber?: string;
+	password?: string;
 }

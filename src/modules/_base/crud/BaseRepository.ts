@@ -201,7 +201,7 @@ export class BaseRepository<T extends BaseDocument> {
 		return this.paginator.paginate(paginationOptions);
 	}
 
-	private mapDocumentData(doc: DocumentSnapshot): T {
+	mapDocumentData(doc: DocumentSnapshot): T {
 		if (!doc.exists) {
 			throw new Error(`Document not found with ID ${doc.id}`);
 		}
@@ -226,7 +226,7 @@ export class BaseRepository<T extends BaseDocument> {
 		} as T;
 	}
 
-	private handleError(error: unknown, message: string): Error {
+	handleError(error: unknown, message: string): Error {
 		console.error('Repository Error:', error);
 
 		if (error instanceof Error) {

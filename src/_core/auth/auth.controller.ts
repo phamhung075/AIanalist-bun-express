@@ -6,7 +6,7 @@ import _ERROR from '../helper/http-status/error';
 import _SUCCESS from '../helper/http-status/success';
 import { CustomRequest } from '../helper/interfaces/CustomRequest.interface';
 import { getTokenCookies } from '../middleware/auth.middleware';
-import { IAuth, IRegister } from './auth.interface';
+import { IAuth, IRegister, IUserProfileUpdate } from './auth.interface';
 import AuthService from './auth.service';
 
 @Service()
@@ -163,6 +163,28 @@ class AuthController {
 				.send(res as any);
 		} catch (error) {
 			console.error('Logout error:', error);
+			next(error);
+		}
+	};
+
+	updateUserProfile: RequestHandler = async (
+		req: CustomRequest<IUserProfileUpdate>,
+		res: Response,
+		next
+	) => {
+		try {
+			const uid = req.user?.uid as string;
+			if (!uid) {
+				throw new _ERROR.UnauthorizedError({ message: 'Unauthorized' });
+			}
+			const result = await this.authService.updateUserProfile(uid, req.body);
+			new _SUCCESS.OkSuccess({
+				message: 'User profile updated successfully',
+				data: result,
+			})
+				.setResponseTime(req.startTime)
+				.send(res as any);
+		} catch (error) {
 			next(error);
 		}
 	};

@@ -52,6 +52,12 @@ router.post(
 	asyncHandler(authController.logout)
 );
 
+router.patch(
+	'/profile',
+	firebaseAuthMiddleware,
+	asyncHandler(authController.updateUserProfile)
+);
+
 router.post('/set-tokens', (req, res) => {
 	console.log('set-tokens ---->');
 	const { idToken, refreshToken } = req.body;

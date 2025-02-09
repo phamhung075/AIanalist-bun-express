@@ -3,7 +3,7 @@ import { UserCredential } from 'firebase/auth';
 import { Service } from 'typedi';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
-import { IRegister } from './auth.interface';
+import { IRegister, IUserProfileUpdate } from './auth.interface';
 import AuthRepository from './auth.repository';
 import { Contact, ContactService } from '@/modules/contact';
 
@@ -106,6 +106,17 @@ export class AuthService {
 			// Additional cleanup if needed (e.g., clearing local storage, redirecting)
 		} catch (error) {
 			// Handle error
+			throw error;
+		}
+	}
+
+	async updateUserProfile(
+		uid: string,
+		profileData: IUserProfileUpdate
+	): Promise<UserRecord> {
+		try {
+			return await this.authRepository.updateUserProfile(uid, profileData);
+		} catch (error) {
 			throw error;
 		}
 	}
