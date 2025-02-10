@@ -1,14 +1,14 @@
 export interface IAuth {
 	email: string;
 	password: string;
-}
-
-export interface IRegister {
-	email: string;
-	password: string;
 	firstName: string;
 	lastName: string;
-	phone: string;
+	phoneNumber: string; // Will be formatted to E.164 format internally
+}
+
+export interface IRegister extends IAuth {
+	firstName: string;
+	lastName: string;
 	address: string;
 	postalCode: string;
 	city: string;
@@ -33,6 +33,6 @@ export interface IUserProfileUpdate {
 	displayName?: string;
 	photoURL?: string;
 	email?: string;
-	phoneNumber?: string;
+	phoneNumber?: string; // Will be formatted to E.164 format internally
 	password?: string;
 }

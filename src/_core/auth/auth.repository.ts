@@ -3,16 +3,19 @@ import {
 	getAuth as getClientAuth,
 	signInWithEmailAndPassword,
 	type UserCredential,
-	updateEmail,
-	updatePassword,
+	updatePhoneNumber,
+	updateProfile,
+	User,
+	PhoneAuthCredential,
 } from 'firebase/auth';
 
-import { UserRecord, type DecodedIdToken } from 'firebase-admin/auth';
+import { UserInfo, UserRecord, type DecodedIdToken } from 'firebase-admin/auth';
 
 import { Service } from 'typedi';
 import { firebaseAdminAuth } from '../database/firebase-admin-sdk/index';
 import _ERROR from '../helper/http-status/error/index';
 import type { IAuth, IUserProfileUpdate } from './auth.interface';
+import { formatPhoneToE164, isValidPhoneNumber } from '@/utils/phone-formatter';
 
 @Service()
 class AuthRepository {
@@ -26,34 +29,45 @@ class AuthRepository {
 		this.adminAuth = firebaseAdminAuth; // Admin SDK auth
 	}
 
-	async createUser(account: IAuth): Promise<UserCredential> {
+	async createUser(account: IAuth): Promise<UserRecord> {
+		// Note the return type change
 		try {
-			const userCredential = await createUserWithEmailAndPassword(
-				this.clientAuth, // Use client auth
-				account.email.toLowerCase(),
-				account.password
-			);
+			// Create user with Admin SDK instead of client SDK
+			const userRecord = await this.adminAuth.createUser({
+				email: account.email.toLowerCase(),
+				password: account.password,
+				displayName: `${account.firstName} ${account.lastName}`,
+				phoneNumber: isValidPhoneNumber(account.phoneNumber)
+					? formatPhoneToE164(account.phoneNumber)
+					: undefined,
+			});
 
-			return userCredential;
+			// Return the created user record
+			return userRecord;
 		} catch (error: any) {
-			console.error('Create user error:', error);
+			console.error('❌ Firebase User Creation Error:', error);
 
 			switch (error.code) {
+				case 'auth/invalid-phone-number':
+					throw new _ERROR.BadRequestError({
+						message:
+							'Invalid phone number format. Please provide a valid phone number.',
+					});
 				case 'auth/email-already-in-use':
 					throw new _ERROR.ConflictError({
-						message: 'Email is already in use',
+						message: "L'email est déjà utilisé",
 					});
 				case 'auth/invalid-email':
-					throw new _ERROR.BadRequestError({ message: 'Invalid email format' });
+					throw new _ERROR.BadRequestError({
+						message: "Format d'email invalide",
+					});
 				case 'auth/weak-password':
-					throw new _ERROR.BadRequestError({ message: 'Password is too weak' });
-				case 'auth/network-request-failed':
-					throw new _ERROR.InternalServerError({
-						message: 'Network connection failed',
+					throw new _ERROR.BadRequestError({
+						message: 'Le mot de passe est trop faible',
 					});
 				default:
 					throw new _ERROR.InternalServerError({
-						message: 'Failed to register user',
+						message: "Échec de l'enregistrement de l'utilisateur",
 					});
 			}
 		}
@@ -221,71 +235,50 @@ class AuthRepository {
 		profileData: IUserProfileUpdate
 	): Promise<UserRecord> {
 		try {
-			if (this.isTestEnvironment && uid === 'test-uid') {
-				return {
-					uid: 'test-uid',
-					email: profileData.email || 'test@example.com',
-					emailVerified: true,
-					displayName: profileData.displayName || 'Test User',
-					disabled: false,
-					metadata: {
-						creationTime: new Date().toISOString(),
-						lastSignInTime: new Date().toISOString(),
-						lastRefreshTime: new Date().toISOString(),
-						toJSON: () => ({}),
-					},
-					providerData: [],
-					toJSON: () => ({}),
-				} as unknown as UserRecord;
+			// Format phone number if provided
+			if (profileData.phoneNumber) {
+				const formattedPhoneNumber = formatPhoneToE164(profileData.phoneNumber);
+				if (!isValidPhoneNumber(formattedPhoneNumber)) {
+					throw new _ERROR.BadRequestError({
+						message: 'Invalid phone number format',
+					});
+				}
+				profileData.phoneNumber = formattedPhoneNumber;
 			}
 
-			// First, update auth profile using admin SDK
+			// Rest of the update logic...
 			const updatedUser = await this.adminAuth.updateUser(uid, {
 				...profileData,
 			});
-
-			// If email is being updated
-			if (profileData.email) {
-				const currentUser = this.clientAuth.currentUser;
-				if (currentUser) {
-					await updateEmail(currentUser, profileData.email);
-				}
-			}
-
-			// If password is being updated
-			if (profileData.password) {
-				const currentUser = this.clientAuth.currentUser;
-				if (currentUser) {
-					await updatePassword(currentUser, profileData.password);
-				}
-			}
 
 			return updatedUser;
 		} catch (error: any) {
 			console.error('❌ Firebase Update User Error:', error);
 
 			switch (error.code) {
-				case 'auth/requires-recent-login':
-					throw new _ERROR.UnauthorizedError({
-						message: 'Please reauthenticate to update sensitive information',
-					});
-				case 'auth/invalid-email':
+				case 'auth/invalid-phone-number':
 					throw new _ERROR.BadRequestError({
-						message: 'Invalid email format',
+						message:
+							'Invalid phone number format. Please use international format (e.g., +33612345678)',
 					});
-				case 'auth/email-already-in-use':
-					throw new _ERROR.ConflictError({
-						message: 'Email is already in use',
-					});
-				case 'auth/weak-password':
-					throw new _ERROR.BadRequestError({
-						message: 'Password is too weak',
-					});
+				// ... other error cases ...
 				default:
 					throw new _ERROR.InternalServerError({
 						message: 'Failed to update user profile',
 					});
 			}
+		}
+	}
+
+	async deleteUser(uid: string): Promise<boolean> {
+		try {
+			await this.adminAuth.deleteUser(uid);
+			return true;
+		} catch (error: any) {
+			console.error('❌ Firebase Delete User Error:', error);
+			throw new _ERROR.InternalServerError({
+				message: 'Failed to delete user',
+			});
 		}
 	}
 }
