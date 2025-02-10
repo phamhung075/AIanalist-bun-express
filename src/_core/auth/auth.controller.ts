@@ -92,6 +92,19 @@ class AuthController {
 			});
 		}
 		const result = req.user;
+		if (result.picture) {
+			//fetch image
+			const url = result.picture;
+			await fetch(url)
+				.then((response) => response.arrayBuffer())
+				.then((arrayBuffer) => {
+					const buffer = Buffer.from(arrayBuffer);
+					result.picture = buffer.toString('base64');
+				})
+				.catch((error) => {
+					console.error("Erreur lors de la récupération de l'image");
+				});
+		}
 		new _SUCCESS.OkSuccess({
 			message: 'User fetched successfully',
 			data: result,
