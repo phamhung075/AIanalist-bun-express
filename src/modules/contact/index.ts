@@ -9,8 +9,8 @@ const contactRepository = Container.get(ContactRepository);
 
 // Export instances
 export { contactController, contactService, contactRepository };
-// Also export the types/classes for type usage
+
+export type { IContact } from './contact.interface';
 export { default as ContactController } from './contact.controller';
 export { default as ContactRepository } from './contact.repository';
 export { default as ContactService } from './contact.service';
-export type { Contact, IContact } from './contact.interface';

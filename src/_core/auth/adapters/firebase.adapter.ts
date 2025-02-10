@@ -1,24 +1,21 @@
 import {
-	createUserWithEmailAndPassword,
 	getAuth as getClientAuth,
 	signInWithEmailAndPassword,
 	type UserCredential,
-	updatePhoneNumber,
-	updateProfile,
-	User,
-	PhoneAuthCredential,
 } from 'firebase/auth';
 
-import { UserInfo, UserRecord, type DecodedIdToken } from 'firebase-admin/auth';
+import { UserRecord, type DecodedIdToken } from 'firebase-admin/auth';
 
 import { Service } from 'typedi';
-import { firebaseAdminAuth } from '../database/firebase-admin-sdk/index';
-import _ERROR from '../helper/http-status/error/index';
-import type { IAuth, IUserProfileUpdate } from './auth.interface';
+
+import { firebaseAdminAuth } from '@/_core/database/firebase-admin-sdk';
+import _ERROR from '@/_core/helper/http-status/error';
 import { formatPhoneToE164, isValidPhoneNumber } from '@/utils/phone-formatter';
+import { IAuth, IUserProfileUpdate } from '../auth.interface';
+import { IAuthAdapter } from './auth.adapter.interface';
 
 @Service()
-class AuthRepository {
+class FirebaseAuthAdapter implements IAuthAdapter {
 	private isTestEnvironment: boolean;
 	private clientAuth; // For client-side operations
 	private adminAuth; // For admin operations
@@ -283,4 +280,4 @@ class AuthRepository {
 	}
 }
 
-export default AuthRepository;
+export default FirebaseAuthAdapter;

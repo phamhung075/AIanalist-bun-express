@@ -4,19 +4,19 @@ import {
 	PermissionHelper,
 } from '@/modules/account';
 import { ContactService, IContact } from '@/modules/contact';
+import { formatPhoneToE164 } from '@/utils/phone-formatter';
 import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
-import { Service } from 'typedi';
+import { Inject, Service } from 'typedi';
 import { BindMethods } from '../decorators/bind-methods.decorator';
 import _ERROR from '../helper/http-status/error';
 import { IRegister, IUserProfileUpdate } from './auth.interface';
-import AuthRepository from './auth.repository';
-import { formatPhoneToE164, isValidPhoneNumber } from '@/utils/phone-formatter';
 
 @Service()
 @BindMethods()
 export class AuthService {
 	constructor(
-		private readonly authRepository: AuthRepository,
+		@Inject('AUTH_ADAPTER')
+		private readonly authRepository: any,
 		private readonly contactService: ContactService,
 		private readonly accountService: AccountService
 	) {}

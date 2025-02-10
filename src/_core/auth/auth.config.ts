@@ -1,7 +1,9 @@
-import { AuthProvider } from './auth.factory';
+import { firebaseConfig } from '../config/dotenv.config';
 
 export const authConfig = {
-	provider: AuthProvider.FIREBASE, // Change to KEYCLOAK when migrating
+	provider: 'firebase' as const,
+	firebase: firebaseConfig,
+	// Keep Keycloak config for future use
 	keycloak: {
 		realm: process.env.KEYCLOAK_REALM || 'your-realm',
 		authServerUrl:
