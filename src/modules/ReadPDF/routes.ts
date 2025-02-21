@@ -5,4 +5,5 @@ import { asyncHandler } from '@/_core/helper/asyncHandler';
 
 const router = createRouter(__filename);
 
-router.get('/readPDF', asyncHandler(readPDFController.readPDF));
+router.post('/', asyncHandler(readPDFController.readPDF));
+export default router;

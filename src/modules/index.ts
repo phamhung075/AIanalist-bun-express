@@ -72,15 +72,15 @@ const initRoutes = async () => {
 		accountRouter
 	);
 
-	//load readPDF routes
-	// const readPDFRoutePath = resolve(__dirname, './ReadPDF/routes.ts');
-	// const readPDFRouter = await loadRoute(readPDFRoutePath);
-	// console.log('loading account routes from:', readPDFRoutePath);
-	// router.use(
-	// 	API_CONFIG.PREFIX + '/readPDF',
-	// 	firebaseAuthMiddleware,
-	// 	readPDFRouter
-	// );
+	// load readPDF routes
+	const readPDFRoutePath = resolve(__dirname, './ReadPDF/routes.ts');
+	const readPDFRouter = await loadRoute(readPDFRoutePath);
+	console.log('loading account routes from:', readPDFRoutePath);
+	router.use(
+		API_CONFIG.PREFIX + '/read-pdf',
+		firebaseAuthMiddleware,
+		readPDFRouter
+	);
 
 	// const tradingRoutePath = resolve(__dirname, "./trading-economics-new/index.ts");
 	// const tradingRouter = await loadRoute(tradingRoutePath);
